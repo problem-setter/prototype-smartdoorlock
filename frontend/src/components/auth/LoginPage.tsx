@@ -6,7 +6,6 @@ import {
   Fingerprint, 
   ArrowRight, 
   Lock, 
-  Radio,
   Cpu,
   Server
 } from 'lucide-react';
@@ -14,9 +13,8 @@ import { UserRole } from '../../types';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { FadeIn } from '@/components/animations/fade-in';
-import { LetterPullUp, GradientText } from '@/components/animations/text-animations';
+import { LetterPullUp } from '@/components/animations/text-animations';
 import { ShimmerButton } from '@/components/animations/shimmer-button';
 import { SpotlightCard } from '@/components/animations/spotlight-card';
 import { PulseBeacon } from '@/components/animations/pulse-beacon';
@@ -57,70 +55,64 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center relative z-10 py-2 sm:py-0">
         
         {/* Left Col: System Overview & Specs */}
-        <FadeIn direction="up" delay={0} className="lg:col-span-7 space-y-3.5 sm:space-y-6">
-          <Badge variant="default" icon={<Radio className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-sky-400" />}>
-            Sistem Keamanan IoT Kampus FT UNTAN
-          </Badge>
-
+        <FadeIn direction="up" delay={0} className="lg:col-span-7 space-y-4 sm:space-y-6">
           <div className="space-y-1.5 sm:space-y-2">
             <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
               <LetterPullUp text="Smart Door Lock" className="block" delay={0.1} />
-              <span className="block mt-1">
-                <GradientText from="from-sky-400" via="via-blue-400" to="to-purple-400">
-                  & Access Control
-                </GradientText>
+              <span className="block mt-1 text-sky-400 font-extrabold">
+                & Access Control
               </span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl leading-relaxed">
-              Platform autentikasi biometrik fingerprint AS608, sensor pintu MC-38, dan aktuator Solenoid 12V berbasis ESP32 & MQTT Protocol untuk Ruang Server & Laboratorium FT UNTAN.
+              Platform autentikasi biometrik fingerprint AS608, sensor pintu MC-38, dan aktuator Solenoid 12V berbasis ESP32 untuk Ruang Server & Laboratorium FT UNTAN.
             </p>
           </div>
 
           {/* Quick Hardware Spec Badges (Compact on mobile) */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-1">
-            <SpotlightCard className="p-2.5 sm:p-3.5 space-y-0.5 sm:space-y-1" spotlightColor="rgba(56,189,248,0.08)">
+            <SpotlightCard className="p-2.5 sm:p-3.5 space-y-1" spotlightColor="rgba(56,189,248,0.12)">
               <div className="flex items-center gap-1.5 text-slate-200">
                 <Fingerprint className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-400 shrink-0" />
-                <span className="text-[11px] sm:text-xs font-semibold truncate">AS608</span>
+                <span className="text-[11px] sm:text-xs font-bold truncate">AS608</span>
               </div>
-              <p className="text-[10px] text-slate-400 line-clamp-1 sm:line-clamp-2">Biometrik Cepat</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">120 Kapasitas FP</p>
             </SpotlightCard>
 
-            <SpotlightCard className="p-2.5 sm:p-3.5 space-y-0.5 sm:space-y-1" spotlightColor="rgba(168,85,247,0.08)">
+            <SpotlightCard className="p-2.5 sm:p-3.5 space-y-1" spotlightColor="rgba(168,85,247,0.12)">
               <div className="flex items-center gap-1.5 text-slate-200">
                 <Cpu className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-400 shrink-0" />
-                <span className="text-[11px] sm:text-xs font-semibold truncate">ESP32</span>
+                <span className="text-[11px] sm:text-xs font-bold truncate">ESP32 SoC</span>
               </div>
-              <p className="text-[10px] text-slate-400 line-clamp-1 sm:line-clamp-2">MQTT QoS 1</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">IoT Secured</p>
             </SpotlightCard>
 
-            <SpotlightCard className="p-2.5 sm:p-3.5 space-y-0.5 sm:space-y-1" spotlightColor="rgba(16,185,129,0.08)">
+            <SpotlightCard className="p-2.5 sm:p-3.5 space-y-1" spotlightColor="rgba(16,185,129,0.12)">
               <div className="flex items-center gap-1.5 text-slate-200">
                 <Server className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 shrink-0" />
-                <span className="text-[11px] sm:text-xs font-semibold truncate">2 Ruangan</span>
+                <span className="text-[11px] sm:text-xs font-bold truncate">2 Ruangan</span>
               </div>
-              <p className="text-[10px] text-slate-400 line-clamp-1 sm:line-clamp-2">Server & NetSec</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">Server & NetSec</p>
             </SpotlightCard>
           </div>
 
           {/* Live Node Status Summary */}
-          <div className="p-3 sm:p-3.5 rounded-xl modern-card flex items-center justify-between">
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-[#090e18]/80 border border-white/[0.08] flex items-center justify-between shadow-inner">
             <div className="flex items-center gap-2.5">
               <PulseBeacon color="emerald" size="sm" />
               <div>
-                <div className="text-[11px] sm:text-xs font-semibold text-white">MQTT Broker (Mosquitto)</div>
-                <div className="text-[10px] text-slate-400 font-mono">10.15.44.1:1883 • Connected</div>
+                <div className="text-[11px] sm:text-xs font-semibold text-white">Status Jaringan Perangkat</div>
+                <div className="text-[10px] text-slate-400 font-mono">ft.untan.ac.id • Semua Node Online</div>
               </div>
             </div>
-            <Badge variant="mono">QoS 1</Badge>
+            <span className="text-[11px] font-mono font-semibold text-emerald-400">ONLINE</span>
           </div>
         </FadeIn>
 
         {/* Right Col: Interactive Login Card */}
         <FadeIn direction="up" delay={0.15} className="lg:col-span-5">
-          <div className="rounded-2xl bg-slate-900/90 border border-white/[0.08] p-4 sm:p-7 space-y-4 sm:space-y-5 shadow-2xl backdrop-blur-xl">
+          <div className="rounded-2xl bg-[#0b111e]/90 border border-white/[0.12] p-4 sm:p-7 space-y-4 sm:space-y-5 shadow-2xl shadow-black/80 backdrop-blur-2xl">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-slate-800 text-sky-400 border border-slate-700">
+              <div className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/25 shadow-[0_0_12px_rgba(14,165,233,0.15)]">
                 <KeyRound className="h-4 w-4" />
               </div>
               <div>
@@ -140,16 +132,19 @@ export const LoginPage: React.FC = () => {
                   const labelMap = {
                     user: { title: 'User', desc: 'Log Pribadi', color: 'text-emerald-300' },
                     admin: { title: 'Admin', desc: 'Ruangan', color: 'text-sky-300' },
-                    superadmin: { title: 'Superadmin', desc: 'Global+MQTT', color: 'text-purple-300' },
+                    superadmin: { title: 'Superadmin', desc: 'Akses Penuh', color: 'text-purple-300' },
                   }[role];
 
                   return (
                     <button
                       key={role}
                       type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      aria-label={`Pilih role ${labelMap.title}: ${labelMap.desc}`}
                       onClick={() => handleQuickRoleSelect(role)}
                       className={cn(
-                        'relative p-2 sm:p-2.5 rounded-xl border text-left transition-all duration-200 cursor-pointer overflow-hidden z-10',
+                        'relative p-2 sm:p-2.5 rounded-xl border text-left transition-all duration-200 cursor-pointer overflow-hidden z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
                         isSelected
                           ? 'border-white/30 text-white shadow-lg'
                           : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:border-slate-700'
@@ -177,11 +172,11 @@ export const LoginPage: React.FC = () => {
 
 
             {/* Simulated Active User Preview */}
-            <div className="p-2.5 sm:p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-2.5 sm:gap-3">
+            <div className="p-2.5 sm:p-3 rounded-xl bg-slate-950/90 border border-white/[0.08] flex items-center gap-2.5 sm:gap-3 shadow-inner">
               <img
                 src={roleUserMap[selectedRole]?.avatarUrl}
                 alt="Avatar"
-                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover border border-slate-700 shrink-0"
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover border border-white/15 shrink-0"
               />
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-semibold text-white truncate">
@@ -191,13 +186,13 @@ export const LoginPage: React.FC = () => {
                   {roleUserMap[selectedRole]?.roleLabel} &bull; {roleUserMap[selectedRole]?.accessibleRoomIds?.length} Ruang Akses
                 </div>
               </div>
-              <Badge variant="mono" className="shrink-0">
+              <span className="text-[10px] font-mono text-slate-300 font-medium shrink-0">
                 {(() => {
                   const targetUser = roleUserMap[selectedRole];
                   const fps = targetUser?.fingerprintTemplateIds || (targetUser?.fingerprintTemplateId ? [targetUser.fingerprintTemplateId] : []);
                   return fps.length > 0 ? `${fps.length}/3 FP (#${fps.join(', #')})` : 'FP N/A';
                 })()}
-              </Badge>
+              </span>
             </div>
 
             {/* Login Form */}
@@ -230,15 +225,15 @@ export const LoginPage: React.FC = () => {
               <ShimmerButton
                 type="submit"
                 variant="sky"
-                className="w-full py-2.5 sm:py-3 mt-1"
+                className="w-full py-2.5 sm:py-3 mt-1 cursor-pointer font-bold"
               >
                 <span>Masuk ke Dashboard</span>
                 <ArrowRight className="h-4 w-4" />
               </ShimmerButton>
             </form>
 
-            <div className="text-center pt-1 border-t border-slate-800">
-              <p className="text-[10px] text-slate-500">
+            <div className="text-center pt-1 border-t border-white/[0.08]">
+              <p className="text-[10px] text-slate-400">
                 Sistem Terautentikasi &bull; Jurusan Informatika FT UNTAN
               </p>
             </div>

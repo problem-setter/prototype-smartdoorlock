@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef, useCallback } from 'react';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 interface MagneticProps {
   children: React.ReactElement;
@@ -12,8 +12,8 @@ interface MagneticProps {
 }
 
 /**
- * React Bits-style Magnetic cursor attract wrapper.
- * Micro-interaction for primary buttons and touch points.
+ * Ultra-optimized Magnetic interaction running directly on Framer Motion's
+ * hardware motion values without triggering React component re-renders.
  */
 export const Magnetic: React.FC<MagneticProps> = ({
   children,
@@ -21,29 +21,48 @@ export const Magnetic: React.FC<MagneticProps> = ({
   intensity = 0.25,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const rectRef = useRef<DOMRect | null>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return;
+  const springX = useSpring(x, springOptions);
+  const springY = useSpring(y, springOptions);
+
+  const handleMouseEnter = useCallback(() => {
+    if (ref.current) {
+      rectRef.current = ref.current.getBoundingClientRect();
+    }
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    let rect = rectRef.current;
+    if (!rect && ref.current) {
+      rect = ref.current.getBoundingClientRect();
+      rectRef.current = rect;
+    }
+    if (!rect) return;
+
     const { clientX, clientY } = e;
-    const { left, top, width, height } = ref.current.getBoundingClientRect();
-    const middleX = clientX - (left + width / 2);
-    const middleY = clientY - (top + height / 2);
-    setPosition({ x: middleX * intensity, y: middleY * intensity });
-  };
+    const middleX = clientX - (rect.left + rect.width / 2);
+    const middleY = clientY - (rect.top + rect.height / 2);
+    x.set(middleX * intensity);
+    y.set(middleY * intensity);
+  }, [intensity, x, y]);
 
-  const handleMouseLeave = () => {
-    setPosition({ x: 0, y: 0 });
-  };
+  const handleMouseLeave = useCallback(() => {
+    rectRef.current = null;
+    x.set(0);
+    y.set(0);
+  }, [x, y]);
 
   return (
     <motion.div
       ref={ref}
+      onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      animate={{ x: position.x, y: position.y }}
-      transition={{ type: 'spring', ...springOptions }}
-      className="inline-block"
+      style={{ x: springX, y: springY }}
+      className="inline-block contain-paint"
     >
       {children}
     </motion.div>

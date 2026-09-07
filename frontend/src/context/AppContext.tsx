@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { User, Room, AccessLog, MQTTMessage, UserRole, DoorStatus, DeviceStatus } from '../types';
 import { INITIAL_USERS, INITIAL_ROOMS, INITIAL_LOGS } from '../mock/initialData';
 import { AppContext } from './AppContextBase';
@@ -404,11 +404,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Door timeout counter tick
+  // Door timeout counter tick - Ultra-optimized with dirty check to avoid re-rendering entire app when doors are closed
   useEffect(() => {
     const timer = setInterval(() => {
-      setRooms((prevRooms) =>
-        prevRooms.map((room) => {
+      setRooms((prevRooms) => {
+        const hasOpenRoom = prevRooms.some((r) => r.doorStatus === 'OPEN');
+        if (!hasOpenRoom) {
+          return prevRooms; // Return identical reference: prevents 100% of unwanted re-renders!
+        }
+
+        return prevRooms.map((room) => {
           if (room.doorStatus === 'OPEN') {
             const nextSec = room.openDurationSeconds + 1;
             const triggerAlarm = nextSec >= room.maxOpenThresholdSeconds && !room.isAlarmActive;
@@ -433,8 +438,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             };
           }
           return room;
-        })
-      );
+        });
+      });
     }, 1000);
 
     return () => clearInterval(timer);
@@ -624,38 +629,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const contextValue = useMemo(
+    () => ({
+      currentUser,
+      users,
+      rooms,
+      logs,
+      mqttMessages,
+      selectedRoomId,
+      login,
+      logout,
+      switchRole,
+      setSelectedRoomId,
+      triggerRemoteUnlock,
+      forceRelock,
+      toggleDoorPhysics,
+      toggleDeviceOnline,
+      pingDevice,
+      requestRoomAccess,
+      simulateFingerprintScan,
+      clearAlarm,
+      addUser,
+      updateUser,
+      updateUserStatus,
+      deleteUser,
+      enrollFingerprint,
+      updateFingerprintLabel,
+      removeFingerprint,
+      clearMqttLogs,
+      exportLogs,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      currentUser,
+      users,
+      rooms,
+      logs,
+      mqttMessages,
+      selectedRoomId,
+    ]
+  );
+
   return (
-    <AppContext.Provider
-      value={{
-        currentUser,
-        users,
-        rooms,
-        logs,
-        mqttMessages,
-        selectedRoomId,
-        login,
-        logout,
-        switchRole,
-        setSelectedRoomId,
-        triggerRemoteUnlock,
-        forceRelock,
-        toggleDoorPhysics,
-        toggleDeviceOnline,
-        pingDevice,
-        requestRoomAccess,
-        simulateFingerprintScan,
-        clearAlarm,
-        addUser,
-        updateUser,
-        updateUserStatus,
-        deleteUser,
-        enrollFingerprint,
-        updateFingerprintLabel,
-        removeFingerprint,
-        clearMqttLogs,
-        exportLogs,
-      }}
-    >
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );

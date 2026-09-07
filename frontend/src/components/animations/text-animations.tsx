@@ -107,27 +107,14 @@ interface GradientTextProps {
 }
 
 /**
- * Animated gradient text with optional continuous animation.
- */
+  * Highlight text styling without artificial gradient mask tells.
+  */
 const GradientText: React.FC<GradientTextProps> = ({
   children,
   className,
-  from = 'from-sky-400',
-  via = 'via-blue-500',
-  to = 'to-purple-500',
-  animate = false,
 }) => {
   return (
-    <span
-      className={cn(
-        'bg-gradient-to-r bg-clip-text text-transparent',
-        from,
-        via,
-        to,
-        animate && 'bg-[length:200%_100%] animate-[gradient-shift_3s_ease_infinite]',
-        className
-      )}
-    >
+    <span className={cn('text-sky-400 font-bold', className)}>
       {children}
     </span>
   );

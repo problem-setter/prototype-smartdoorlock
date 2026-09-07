@@ -11,7 +11,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="relative w-full">
         {icon && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none flex items-center justify-center">
             {icon}
           </span>
         )}
@@ -19,7 +19,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={type}
           ref={ref}
           className={cn(
-            'w-full rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-white placeholder:text-slate-500 transition-colors focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 disabled:opacity-50 disabled:cursor-not-allowed',
+            'w-full rounded-xl bg-slate-950/80 border border-white/10 text-xs sm:text-sm text-white placeholder:text-slate-500 shadow-inner transition-all focus:outline-none focus:border-sky-400/80 focus:ring-2 focus:ring-sky-500/25 focus:bg-slate-950 disabled:opacity-50 disabled:cursor-not-allowed',
             icon ? 'pl-9 pr-3 py-2 sm:py-2.5' : 'px-3 py-2 sm:py-2.5',
             rightIcon && 'pr-9',
             className
@@ -27,7 +27,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {rightIcon && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none flex items-center justify-center">
             {rightIcon}
           </span>
         )}
@@ -38,3 +38,4 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 Input.displayName = 'Input';
 
 export { Input };
+

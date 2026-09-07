@@ -13,4 +13,10 @@ export { BiometricScanner } from './biometric-scanner';
 export { InteractiveDoorState } from './interactive-door-state';
 export { ToastNotification } from './toast-notification';
 export type { ToastItem, ToastVariant } from './toast-notification';
+export { SlideToUnlock } from './slide-to-unlock';
+export type { SlideToUnlockProps } from './slide-to-unlock';
+export { PillNav } from './PillNav';
+export type { PillNavItem, PillNavProps } from './PillNav';
+
+
 

@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, XCircle, AlertTriangle, ShieldCheck, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 
 export interface ToastItem {
@@ -26,10 +25,10 @@ const toastIcons: Record<ToastVariant, React.ReactNode> = {
 };
 
 const toastBorderBg: Record<ToastVariant, string> = {
-  success: 'bg-emerald-950/90 border-emerald-700/60 text-emerald-100 shadow-emerald-950/50',
-  error: 'bg-rose-950/90 border-rose-700/60 text-rose-100 shadow-rose-950/50',
-  warning: 'bg-amber-950/90 border-amber-700/60 text-amber-100 shadow-amber-950/50',
-  info: 'bg-sky-950/90 border-sky-700/60 text-sky-100 shadow-sky-950/50',
+  success: 'bg-[#091a14]/95 border-emerald-500/40 text-emerald-100 shadow-[0_8px_32px_rgba(16,185,129,0.25)]',
+  error: 'bg-[#1e0a10]/95 border-rose-500/40 text-rose-100 shadow-[0_8px_32px_rgba(244,63,94,0.25)]',
+  warning: 'bg-[#1c1306]/95 border-amber-500/40 text-amber-100 shadow-[0_8px_32px_rgba(245,158,11,0.25)]',
+  info: 'bg-[#081525]/95 border-sky-500/40 text-sky-100 shadow-[0_8px_32px_rgba(14,165,233,0.25)]',
 };
 
 const toastProgressBar: Record<ToastVariant, string> = {
@@ -41,7 +40,11 @@ const toastProgressBar: Record<ToastVariant, string> = {
 
 export const ToastNotification: React.FC<ToastNotificationProps> = ({ toasts, onDismiss }) => {
   return (
-    <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-3 sm:px-0">
+    <div
+      aria-live="polite"
+      aria-atomic="true"
+      className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-3 sm:px-0"
+    >
       <AnimatePresence>
         {toasts.map((toast) => {
           const variant = toast.variant || 'success';
@@ -51,25 +54,25 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({ toasts, on
             <motion.div
               key={toast.id}
               layout
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              initial={{ opacity: 0, y: 24, scale: 0.94 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9, y: 10, transition: { duration: 0.15 } }}
-              transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+              exit={{ opacity: 0, scale: 0.92, y: 12, transition: { duration: 0.16 } }}
+              transition={{ type: 'spring', stiffness: 380, damping: 26 }}
               className={cn(
-                'pointer-events-auto relative overflow-hidden rounded-xl border p-3 sm:p-3.5 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-3',
+                'pointer-events-auto relative overflow-hidden rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-3',
                 toastBorderBg[variant]
               )}
             >
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 {toastIcons[variant]}
-                <span className="text-xs sm:text-sm font-medium tracking-tight truncate leading-snug">
+                <span className="text-xs sm:text-sm font-semibold tracking-tight truncate leading-snug">
                   {toast.message}
                 </span>
               </div>
 
               <button
                 onClick={() => onDismiss(toast.id)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
                 aria-label="Dismiss"
               >
                 <X className="h-3.5 w-3.5" />
@@ -80,7 +83,7 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({ toasts, on
                 initial={{ width: '100%' }}
                 animate={{ width: '0%' }}
                 transition={{ duration: duration / 1000, ease: 'linear' }}
-                className={cn('absolute bottom-0 inset-x-0 h-0.5', toastProgressBar[variant])}
+                className={cn('absolute bottom-0 inset-x-0 h-[2px]', toastProgressBar[variant])}
               />
             </motion.div>
           );
@@ -90,3 +93,4 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({ toasts, on
   );
 };
 ToastNotification.displayName = 'ToastNotification';
+

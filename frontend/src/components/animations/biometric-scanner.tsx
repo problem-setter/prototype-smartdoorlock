@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Fingerprint, CheckCircle2, XCircle } from 'lucide-react';
+import { Fingerprint, CheckCircle2, XCircle, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type BiometricScanStatus = 'idle' | 'scanning' | 'success' | 'failed' | 'denied';
@@ -24,49 +24,49 @@ const sizeConfig = {
 
 const statusColors = {
   idle: {
-    border: 'border-slate-700/70 group-hover:border-sky-500/50',
-    bg: 'bg-slate-950/80',
-    glow: 'group-hover:shadow-[0_0_20px_rgba(14,165,233,0.2)]',
+    border: 'border-white/10 group-hover:border-sky-500/60',
+    bg: 'bg-gradient-to-b from-slate-900/90 to-slate-950/90',
+    glow: 'group-hover:shadow-[0_0_30px_rgba(14,165,233,0.25)]',
     icon: 'text-slate-400 group-hover:text-sky-400',
     laser: 'from-transparent via-sky-400 to-transparent',
-    laserShadow: 'shadow-[0_0_8px_rgba(56,189,248,0.8)]',
+    laserShadow: 'shadow-[0_0_10px_rgba(56,189,248,0.9)]',
     ring: 'border-sky-500/20',
   },
   scanning: {
-    border: 'border-sky-500 shadow-[0_0_25px_rgba(14,165,233,0.35)]',
-    bg: 'bg-sky-950/30',
-    glow: 'shadow-[0_0_30px_rgba(14,165,233,0.3)]',
-    icon: 'text-sky-400',
-    laser: 'from-transparent via-sky-400 to-transparent',
-    laserShadow: 'shadow-[0_0_12px_rgba(56,189,248,1)]',
-    ring: 'border-sky-500/40',
+    border: 'border-sky-400 shadow-[0_0_35px_rgba(14,165,233,0.5)]',
+    bg: 'bg-gradient-to-b from-sky-950/60 to-slate-950/90',
+    glow: 'shadow-[0_0_40px_rgba(14,165,233,0.4)]',
+    icon: 'text-sky-300',
+    laser: 'from-transparent via-sky-300 to-transparent',
+    laserShadow: 'shadow-[0_0_16px_rgba(56,189,248,1)]',
+    ring: 'border-sky-400/50',
   },
   success: {
-    border: 'border-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.4)]',
-    bg: 'bg-emerald-950/40',
-    glow: 'shadow-[0_0_30px_rgba(16,185,129,0.35)]',
-    icon: 'text-emerald-400',
-    laser: 'from-transparent via-emerald-400 to-transparent',
-    laserShadow: 'shadow-[0_0_12px_rgba(16,185,129,1)]',
-    ring: 'border-emerald-500/50',
+    border: 'border-emerald-400 shadow-[0_0_35px_rgba(16,185,129,0.5)]',
+    bg: 'bg-gradient-to-b from-emerald-950/60 to-slate-950/90',
+    glow: 'shadow-[0_0_40px_rgba(16,185,129,0.45)]',
+    icon: 'text-emerald-300',
+    laser: 'from-transparent via-emerald-300 to-transparent',
+    laserShadow: 'shadow-[0_0_16px_rgba(16,185,129,1)]',
+    ring: 'border-emerald-400/60',
   },
   failed: {
-    border: 'border-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.4)]',
-    bg: 'bg-rose-950/40',
-    glow: 'shadow-[0_0_30px_rgba(244,63,94,0.35)]',
-    icon: 'text-rose-400',
-    laser: 'from-transparent via-rose-400 to-transparent',
-    laserShadow: 'shadow-[0_0_12px_rgba(244,63,94,1)]',
-    ring: 'border-rose-500/50',
+    border: 'border-rose-400 shadow-[0_0_35px_rgba(244,63,94,0.5)]',
+    bg: 'bg-gradient-to-b from-rose-950/60 to-slate-950/90',
+    glow: 'shadow-[0_0_40px_rgba(244,63,94,0.45)]',
+    icon: 'text-rose-300',
+    laser: 'from-transparent via-rose-300 to-transparent',
+    laserShadow: 'shadow-[0_0_16px_rgba(244,63,94,1)]',
+    ring: 'border-rose-400/60',
   },
   denied: {
-    border: 'border-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.4)]',
-    bg: 'bg-amber-950/40',
-    glow: 'shadow-[0_0_30px_rgba(245,158,11,0.35)]',
-    icon: 'text-amber-400',
-    laser: 'from-transparent via-amber-400 to-transparent',
-    laserShadow: 'shadow-[0_0_12px_rgba(245,158,11,1)]',
-    ring: 'border-amber-500/50',
+    border: 'border-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.5)]',
+    bg: 'bg-gradient-to-b from-amber-950/60 to-slate-950/90',
+    glow: 'shadow-[0_0_40px_rgba(245,158,11,0.45)]',
+    icon: 'text-amber-300',
+    laser: 'from-transparent via-amber-300 to-transparent',
+    laserShadow: 'shadow-[0_0_16px_rgba(245,158,11,1)]',
+    ring: 'border-amber-400/60',
   },
 };
 
@@ -89,6 +89,7 @@ export const BiometricScanner: React.FC<BiometricScannerProps> = ({
         type="button"
         onClick={onScanClick}
         disabled={status === 'scanning'}
+        aria-label={label || 'Sensor Biometrik Sidik Jari AS608'}
         whileHover={onScanClick && status === 'idle' ? { scale: 1.04 } : undefined}
         whileTap={onScanClick && status === 'idle' ? { scale: 0.95 } : undefined}
         className={cn(
@@ -183,34 +184,49 @@ export const BiometricScanner: React.FC<BiometricScannerProps> = ({
               </motion.div>
             )}
 
-            {(status === 'failed' || status === 'denied') && (
+            {status === 'failed' && (
               <motion.div
-                key="error"
+                key="failed"
                 initial={{ opacity: 0, scale: 0.5, x: -6 }}
                 animate={{ opacity: 1, scale: 1, x: [0, -6, 6, -4, 4, 0] }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.4 }}
-                className={status === 'failed' ? 'text-rose-400' : 'text-amber-400'}
+                className="text-rose-400"
               >
                 <XCircle className={currentSize.iconSize} strokeWidth={2} />
+              </motion.div>
+            )}
+
+            {status === 'denied' && (
+              <motion.div
+                key="denied"
+                initial={{ opacity: 0, scale: 0.5, x: -6 }}
+                animate={{ opacity: 1, scale: 1, x: [0, -6, 6, -4, 4, 0] }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.4 }}
+                className="text-amber-400"
+              >
+                <ShieldAlert className={currentSize.iconSize} strokeWidth={2} />
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <div className="absolute inset-1 rounded-full border border-white/5 pointer-events-none" />
+        {/* Outer Bevel Highlight */}
+        <div className="absolute inset-1 rounded-full border border-white/10 pointer-events-none" />
       </motion.button>
 
       {(label || step !== undefined) && (
-        <div className="text-center space-y-1">
+        <div className="text-center space-y-1 max-w-[280px]">
           {step !== undefined && maxSteps !== undefined && (
-            <div className="flex items-center justify-center gap-1.5 mb-1">
+            <div className="flex items-center justify-center gap-1.5 mb-1.5">
               {Array.from({ length: maxSteps }).map((_, i) => (
                 <motion.div
                   key={i}
                   animate={{
                     scale: i + 1 === step ? 1.25 : 1,
                     backgroundColor: i + 1 <= step ? '#a855f7' : '#334155',
+                    boxShadow: i + 1 === step ? '0 0 8px #a855f7' : 'none',
                   }}
                   className="h-1.5 w-5 rounded-full"
                 />
@@ -219,13 +235,13 @@ export const BiometricScanner: React.FC<BiometricScannerProps> = ({
           )}
 
           {label && (
-            <div className="text-xs sm:text-sm font-semibold text-white tracking-tight">
+            <div className="text-xs sm:text-sm font-bold text-white tracking-tight leading-snug">
               {label}
             </div>
           )}
 
           {sublabel && (
-            <div className="text-[10px] sm:text-xs text-slate-400 font-mono">
+            <div className="text-[10px] sm:text-xs text-slate-400 font-mono leading-relaxed">
               {sublabel}
             </div>
           )}

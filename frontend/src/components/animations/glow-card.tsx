@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 
 interface GlowCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -11,13 +11,14 @@ interface GlowCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * React Bits-style card with mouse-following glow border effect.
+ * Ultra-optimized GlowCard using cached bounding rect & direct GPU updates.
+ * Eliminates forced synchronous layout reflows on pointer movement.
  */
 const GlowCard: React.FC<GlowCardProps> = ({
   children,
   className,
-  glowColor = 'rgba(56, 189, 248, 0.15)',
-  glowSize = 200,
+  glowColor = 'rgba(56, 189, 248, 0.18)',
+  glowSize = 240,
   style,
   id,
   onMouseMove,
@@ -26,28 +27,52 @@ const GlowCard: React.FC<GlowCardProps> = ({
   ...props
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
+  const glowLayerRef = useRef<HTMLDivElement>(null);
+  const rectRef = useRef<DOMRect | null>(null);
+  const rafRef = useRef<number | null>(null);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    setMousePosition({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
-    onMouseMove?.(e);
-  };
-
-  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-    setIsHovered(true);
+  const handleMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (cardRef.current) {
+      rectRef.current = cardRef.current.getBoundingClientRect();
+    }
+    if (glowLayerRef.current) {
+      glowLayerRef.current.style.opacity = '1';
+    }
     onMouseEnter?.(e);
-  };
+  }, [onMouseEnter]);
 
-  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-    setIsHovered(false);
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!glowLayerRef.current) return;
+
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      if (!glowLayerRef.current) return;
+      let rect = rectRef.current;
+      if (!rect && cardRef.current) {
+        rect = cardRef.current.getBoundingClientRect();
+        rectRef.current = rect;
+      }
+      if (!rect) return;
+
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      glowLayerRef.current.style.background = `radial-gradient(${glowSize}px circle at ${x}px ${y}px, ${glowColor}, transparent 70%)`;
+    });
+
+    onMouseMove?.(e);
+  }, [glowColor, glowSize, onMouseMove]);
+
+  const handleMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rectRef.current = null;
+    if (glowLayerRef.current) {
+      glowLayerRef.current.style.opacity = '0';
+    }
     onMouseLeave?.(e);
-  };
+  }, [onMouseLeave]);
 
   return (
     <div
@@ -58,20 +83,15 @@ const GlowCard: React.FC<GlowCardProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        'relative overflow-hidden rounded-2xl bg-[#0c111d] border border-slate-800 transition-all hover:border-slate-700 hover:-translate-y-0.5',
+        'relative overflow-hidden rounded-2xl bg-[#0c111d] border border-white/[0.08] shadow-lg shadow-black/40 transition-all duration-200 hover:border-white/20 hover:shadow-2xl hover:shadow-black/60 hover:-translate-y-0.5 contain-paint',
         className
       )}
       {...props}
     >
-      {/* Glow effect layer */}
-      {isHovered && (
-        <div
-          className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-300"
-          style={{
-            background: `radial-gradient(${glowSize}px circle at ${mousePosition.x}px ${mousePosition.y}px, ${glowColor}, transparent 70%)`,
-          }}
-        />
-      )}
+      <div
+        ref={glowLayerRef}
+        className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-200"
+      />
       <div className="relative z-10">{children}</div>
     </div>
   );
@@ -79,6 +99,3 @@ const GlowCard: React.FC<GlowCardProps> = ({
 GlowCard.displayName = 'GlowCard';
 
 export { GlowCard };
-
-
-

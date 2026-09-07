@@ -35,9 +35,9 @@ const Switch: React.FC<SwitchProps> = ({
       disabled={disabled}
       onClick={() => onCheckedChange(!checked)}
       className={cn(
-        'peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06090f] disabled:cursor-not-allowed disabled:opacity-50 relative',
+        'peer inline-flex shrink-0 cursor-pointer items-center rounded-full border border-white/10 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06090f] disabled:cursor-not-allowed disabled:opacity-50 relative shadow-inner',
         s.track,
-        checked ? 'bg-sky-500 shadow-sm shadow-sky-500/30' : 'bg-slate-800 border-slate-700',
+        checked ? 'bg-gradient-to-r from-sky-500 to-blue-600 shadow-[0_0_12px_rgba(14,165,233,0.4)] border-sky-400/50' : 'bg-slate-900 border-slate-700',
         className
       )}
     >
@@ -46,10 +46,11 @@ const Switch: React.FC<SwitchProps> = ({
         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
         animate={{
           x: checked ? s.offset : 0,
-          backgroundColor: checked ? '#ffffff' : '#cbd5e1',
+          backgroundColor: '#ffffff',
+          boxShadow: checked ? '0 0 8px rgba(255,255,255,0.8)' : '0 1px 3px rgba(0,0,0,0.4)',
         }}
         className={cn(
-          'pointer-events-none block rounded-full shadow-md ring-0',
+          'pointer-events-none block rounded-full ring-0 shadow-sm',
           s.thumb
         )}
       />
@@ -59,4 +60,5 @@ const Switch: React.FC<SwitchProps> = ({
 Switch.displayName = 'Switch';
 
 export { Switch };
+
 

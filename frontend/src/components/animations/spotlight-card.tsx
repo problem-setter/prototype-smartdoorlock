@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 
 interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -8,48 +8,82 @@ interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * React Bits-style spotlight card with mouse-following light beam.
+ * Ultra-optimized SpotlightCard using cached bounding rect & direct GPU updates.
+ * Eliminates forced synchronous layout reflows on pointer movement.
  */
 const SpotlightCard: React.FC<SpotlightCardProps> = ({
   children,
   className,
-  spotlightColor = 'rgba(14, 165, 233, 0.06)',
-  spotlightSize = 350,
+  spotlightColor = 'rgba(14, 165, 233, 0.08)',
+  spotlightSize = 380,
+  onMouseMove,
+  onMouseEnter,
+  onMouseLeave,
   ...props
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
+  const spotlightRef = useRef<HTMLDivElement>(null);
+  const rectRef = useRef<DOMRect | null>(null);
+  const rafRef = useRef<number | null>(null);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    setPosition({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+  const handleMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (cardRef.current) {
+      rectRef.current = cardRef.current.getBoundingClientRect();
+    }
+    if (spotlightRef.current) {
+      spotlightRef.current.style.opacity = '1';
+    }
+    onMouseEnter?.(e);
+  }, [onMouseEnter]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!spotlightRef.current) return;
+
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      if (!spotlightRef.current) return;
+      let rect = rectRef.current;
+      if (!rect && cardRef.current) {
+        rect = cardRef.current.getBoundingClientRect();
+        rectRef.current = rect;
+      }
+      if (!rect) return;
+
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      spotlightRef.current.style.background = `radial-gradient(${spotlightSize}px ellipse at ${x}px ${y}px, ${spotlightColor}, transparent 70%)`;
     });
-  };
+
+    onMouseMove?.(e);
+  }, [spotlightColor, spotlightSize, onMouseMove]);
+
+  const handleMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rectRef.current = null;
+    if (spotlightRef.current) {
+      spotlightRef.current.style.opacity = '0';
+    }
+    onMouseLeave?.(e);
+  }, [onMouseLeave]);
 
   return (
     <div
       ref={cardRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className={cn(
-        'relative overflow-hidden rounded-2xl bg-slate-900/70 border border-white/10 transition-all',
-        isHovered && 'border-white/15',
+        'relative overflow-hidden rounded-2xl bg-[#0c111d] border border-white/[0.08] shadow-lg shadow-black/40 transition-all duration-200 hover:border-white/20 contain-paint',
         className
       )}
       {...props}
     >
-      {/* Spotlight beam */}
       <div
-        className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-500"
-        style={{
-          opacity: isHovered ? 1 : 0,
-          background: `radial-gradient(${spotlightSize}px ellipse at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 70%)`,
-        }}
+        ref={spotlightRef}
+        className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300"
       />
       <div className="relative z-10">{children}</div>
     </div>
