@@ -85,16 +85,16 @@ export function MainLayout() {
         <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-center sm:text-left">
             <Shield className="h-4 w-4 text-sky-400 shrink-0" />
-            <span className="font-medium text-slate-300 text-[11px] sm:text-xs">
-              Smart Door Lock System &bull; FT UNTAN
+            <span className="font-semibold text-slate-300 text-[11px] sm:text-xs">
+              YOU-LOCK™ <span className="font-mono font-normal text-slate-500">// VaultOS Enterprise Physical Enclave &bull; FT UNTAN</span>
             </span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] sm:text-[11px] font-mono text-slate-400">
             <PulseBeacon color="emerald" size="sm" label="ESP32-WROOM-32" />
             <span>&bull;</span>
-            <span>AS608 Sensor</span>
+            <span>AS608 Optical Bio</span>
             <span>&bull;</span>
-            <span>IoT Secured</span>
+            <span className="text-sky-400">QoS 1 Protected</span>
           </div>
         </div>
       </footer>

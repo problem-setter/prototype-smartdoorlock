@@ -42,13 +42,19 @@ export const RoomList: React.FC<RoomListProps> = ({ onSelectRoom }) => {
       
       {/* Hero Header & User Welcome */}
       <FadeIn direction="up">
-        <Card className="p-4 sm:p-7 space-y-4 sm:space-y-0 relative overflow-hidden bg-[#0c111d] border-white/[0.09]">
+        <Card className="p-4 sm:p-7 space-y-4 sm:space-y-0 relative overflow-hidden bg-[#0c111d] border-white/[0.09] shadow-2xl">
           {/* Subtle Ambient Radial Highlight */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-sky-500/15 via-purple-500/10 to-transparent rounded-full pointer-events-none blur-3xl -mr-20 -mt-20" />
 
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 relative z-10">
             <div className="space-y-1.5 sm:space-y-2">
-              <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-sky-950/80 border border-sky-500/30 text-[10px] font-mono text-sky-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>VaultOS Node Control</span>
+                <span className="text-sky-600">&bull;</span>
+                <span className="text-slate-400">QoS 1 Protected</span>
+              </div>
+              <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight">
                 Selamat Datang, <TextReveal text={currentUser.name} delay={0.1} />
               </h1>
               <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
@@ -66,14 +72,14 @@ export const RoomList: React.FC<RoomListProps> = ({ onSelectRoom }) => {
 
             {/* Quick Metrics Cards */}
             <div className="grid grid-cols-3 gap-2 sm:gap-3.5 shrink-0 pt-1 lg:pt-0">
-              <div className="p-3 sm:p-4 rounded-xl bg-slate-950/80 border border-white/[0.08] flex flex-col justify-between shadow-inner">
+              <div className="p-3 sm:p-4 rounded-xl bg-slate-950/85 border border-white/[0.08] flex flex-col justify-between shadow-inner">
                 <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider truncate font-mono">Ruangan</div>
                 <div className="text-lg sm:text-2xl font-extrabold text-white font-mono mt-0.5">
                   <AnimatedCounter value={accessibleRooms.length} /> <span className="text-[10px] sm:text-xs text-slate-400 font-normal font-sans">Lab</span>
                 </div>
               </div>
 
-              <div className="p-3 sm:p-4 rounded-xl bg-slate-950/80 border border-white/[0.08] flex flex-col justify-between shadow-inner">
+              <div className="p-3 sm:p-4 rounded-xl bg-slate-950/85 border border-white/[0.08] flex flex-col justify-between shadow-inner">
                 <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider truncate font-mono">Total Akses</div>
                 <div className="text-lg sm:text-2xl font-extrabold text-slate-100 font-mono mt-0.5">
                   <AnimatedCounter value={totalAccessToday} /> <span className="text-[10px] sm:text-xs text-slate-400 font-normal font-sans">Hari Ini</span>

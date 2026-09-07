@@ -257,6 +257,22 @@
   .animate-unlock-wave {
     animation: none !important;
   }
+/* Brandkit Technical Aesthetics & Micro-Bevels */
+.text-glow-sm {
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.4);
+}
+
+.text-glow-brand {
+  text-shadow: 0 0 18px rgba(14, 165, 233, 0.6);
+}
+
+.technical-grid-bg {
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
 }
 
 

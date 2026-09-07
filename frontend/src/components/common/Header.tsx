@@ -17,6 +17,9 @@ import { UserRole } from '../../types';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip } from '@/components/ui/tooltip';
 import { PulseBeacon } from '@/components/animations/pulse-beacon';
+import { BrandLogo } from './BrandLogo';
+import { Radio } from 'lucide-react';
+
 
 export const Header: React.FC = () => {
   const { currentUser, logout, switchRole, setSelectedRoomId } = useApp();
@@ -56,31 +59,24 @@ export const Header: React.FC = () => {
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button 
               onClick={() => setSelectedRoomId(null)}
-              className="flex items-center gap-2 sm:gap-3 text-left transition-all active:scale-95 group shrink-0 cursor-pointer"
-              aria-label="Beranda Smart Lock"
+              className="flex items-center gap-2 sm:gap-3 text-left transition-all active:scale-95 group shrink-0 cursor-pointer outline-none"
+              aria-label="Beranda YOU-LOCK"
             >
-              <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500/20 via-sky-600/15 to-blue-700/10 text-sky-400 border border-sky-500/40 shadow-[0_0_18px_rgba(14,165,233,0.3)] group-hover:border-sky-400/70 group-hover:shadow-[0_0_22px_rgba(14,165,233,0.45)] transition-all">
-                <Shield className="h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-110 transition-transform" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs sm:text-sm font-extrabold tracking-tight text-white truncate block">
-                  UNTAN Lock
-                </span>
-                <p className="text-[10px] sm:text-[11px] text-slate-400 font-mono hidden xs:block truncate max-w-[150px] sm:max-w-none">
-                  Fakultas Teknik &bull; Lab Server & NetSec
-                </p>
-              </div>
+              <BrandLogo size="md" />
             </button>
           </div>
 
           {/* Telemetry Pill & User Controls */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Live System Heartbeat Pill */}
-            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-950/80 border border-white/[0.08] text-[10px] font-mono text-slate-400">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-950/90 border border-white/[0.08] text-[10px] font-mono text-slate-400">
               <PulseBeacon color="emerald" size="sm" />
-              <span>Sistem IoT Aktif</span>
+              <span className="text-slate-300 font-semibold">QoS 1 MESH</span>
               <span className="text-slate-600">|</span>
-              <span className="text-emerald-400 font-semibold">Online</span>
+              <span className="text-sky-400 flex items-center gap-1">
+                <Radio className="h-3 w-3" />
+                12ms ACK
+              </span>
             </div>
 
             {/* Role Switcher Pill */}

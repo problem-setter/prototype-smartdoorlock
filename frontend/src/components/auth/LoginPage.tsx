@@ -7,7 +7,10 @@ import {
   ArrowRight, 
   Lock, 
   Cpu,
-  Server
+  Server,
+  ShieldCheck,
+  Radio,
+  Sparkles
 } from 'lucide-react';
 import { UserRole } from '../../types';
 import { cn } from '@/lib/utils';
@@ -18,8 +21,7 @@ import { LetterPullUp } from '@/components/animations/text-animations';
 import { ShimmerButton } from '@/components/animations/shimmer-button';
 import { SpotlightCard } from '@/components/animations/spotlight-card';
 import { PulseBeacon } from '@/components/animations/pulse-beacon';
-
-
+import { BrandLogo } from '@/components/common/BrandLogo';
 
 export const LoginPage: React.FC = () => {
   const { users, login } = useApp();
@@ -49,62 +51,65 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-
   return (
     <div className="min-h-[100dvh] w-full flex items-center justify-center p-3.5 sm:p-6 lg:p-8 relative bg-ambient-glow safe-pb safe-pt">
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center relative z-10 py-2 sm:py-0">
         
         {/* Left Col: System Overview & Specs */}
         <FadeIn direction="up" delay={0} className="lg:col-span-7 space-y-4 sm:space-y-6">
-          <div className="space-y-1.5 sm:space-y-2">
-            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
-              <LetterPullUp text="Smart Door Lock" className="block" delay={0.1} />
-              <span className="block mt-1 text-sky-400 font-extrabold">
-                & Access Control
-              </span>
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-xl leading-relaxed">
-              Platform autentikasi biometrik fingerprint AS608, sensor pintu MC-38, dan aktuator Solenoid 12V berbasis ESP32 untuk Ruang Server & Laboratorium FT UNTAN.
-            </p>
+          <div className="space-y-3">
+            <BrandLogo size="lg" />
+            
+            <div className="pt-2">
+              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                <LetterPullUp text="Enterprise Biometric" className="block" delay={0.08} />
+                <span className="block mt-1 text-sky-400 font-black">
+                  Access & Telemetry Enclave
+                </span>
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-400 max-w-xl leading-relaxed mt-2">
+                Sistem kontrol akses fisik pintar berbasis optik biometrik AS608, sensor sirkuit MC-38, dan aktuator Solenoid 12V berdaya tinggi dengan enkripsi MQTT QoS 1 untuk Laboratorium Jaringan & Ruang Server FT UNTAN.
+              </p>
+            </div>
           </div>
 
-          {/* Quick Hardware Spec Badges (Compact on mobile) */}
+          {/* Quick Hardware Spec Badges */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-1">
-            <SpotlightCard className="p-2.5 sm:p-3.5 space-y-1" spotlightColor="rgba(56,189,248,0.12)">
+            <SpotlightCard className="p-2.5 sm:p-3.5 space-y-1 bg-[#0c111d] border-white/[0.08]" spotlightColor="rgba(56,189,248,0.12)">
               <div className="flex items-center gap-1.5 text-slate-200">
                 <Fingerprint className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-400 shrink-0" />
-                <span className="text-[11px] sm:text-xs font-bold truncate">AS608</span>
+                <span className="text-[11px] sm:text-xs font-bold truncate">AS608 Optical</span>
               </div>
-              <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">120 Kapasitas FP</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-mono truncate">120 Template Enclave</p>
             </SpotlightCard>
 
-            <SpotlightCard className="p-2.5 sm:p-3.5 space-y-1" spotlightColor="rgba(168,85,247,0.12)">
+            <SpotlightCard className="p-2.5 sm:p-3.5 space-y-1 bg-[#0c111d] border-white/[0.08]" spotlightColor="rgba(168,85,247,0.12)">
               <div className="flex items-center gap-1.5 text-slate-200">
                 <Cpu className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-400 shrink-0" />
-                <span className="text-[11px] sm:text-xs font-bold truncate">ESP32 SoC</span>
+                <span className="text-[11px] sm:text-xs font-bold truncate">ESP32 Core</span>
               </div>
-              <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">IoT Secured</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-mono truncate">QoS 1 Telemetry</p>
             </SpotlightCard>
 
-            <SpotlightCard className="p-2.5 sm:p-3.5 space-y-1" spotlightColor="rgba(16,185,129,0.12)">
+            <SpotlightCard className="p-2.5 sm:p-3.5 space-y-1 bg-[#0c111d] border-white/[0.08]" spotlightColor="rgba(16,185,129,0.12)">
               <div className="flex items-center gap-1.5 text-slate-200">
                 <Server className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 shrink-0" />
-                <span className="text-[11px] sm:text-xs font-bold truncate">2 Ruangan</span>
+                <span className="text-[11px] sm:text-xs font-bold truncate">Dual Node</span>
               </div>
-              <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">Server & NetSec</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-mono truncate">Server & NetSec Lab</p>
             </SpotlightCard>
           </div>
 
           {/* Live Node Status Summary */}
-          <div className="p-3 sm:p-3.5 rounded-2xl bg-[#090e18]/80 border border-white/[0.08] flex items-center justify-between shadow-inner">
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-[#090e18]/90 border border-white/[0.08] flex items-center justify-between shadow-inner">
             <div className="flex items-center gap-2.5">
               <PulseBeacon color="emerald" size="sm" />
               <div>
                 <div className="text-[11px] sm:text-xs font-semibold text-white">Status Jaringan Perangkat</div>
-                <div className="text-[10px] text-slate-400 font-mono">ft.untan.ac.id • Semua Node Online</div>
+                <div className="text-[10px] text-slate-400 font-mono">ft.untan.ac.id &bull; 2 Node Operasional (12ms)</div>
               </div>
             </div>
-            <span className="text-[11px] font-mono font-semibold text-emerald-400">ONLINE</span>
+            <span className="text-[11px] font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">ONLINE</span>
           </div>
         </FadeIn>
 
