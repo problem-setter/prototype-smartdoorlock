@@ -11,14 +11,14 @@ interface GlowCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Ultra-optimized GlowCard using cached bounding rect & direct GPU updates.
- * Eliminates forced synchronous layout reflows on pointer movement.
+ * Ultra-optimized GlowCard styled for the Notion design system.
+ * Uses warm canvas / surface colors with subtle layered elevation.
  */
 const GlowCard: React.FC<GlowCardProps> = ({
   children,
   className,
-  glowColor = 'rgba(56, 189, 248, 0.18)',
-  glowSize = 240,
+  glowColor = 'rgba(0, 117, 222, 0.08)',
+  glowSize = 260,
   style,
   id,
   onMouseMove,
@@ -83,7 +83,7 @@ const GlowCard: React.FC<GlowCardProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        'relative overflow-hidden rounded-2xl bg-[#0c111d] border border-white/[0.08] shadow-lg shadow-black/40 transition-all duration-200 hover:border-white/20 hover:shadow-2xl hover:shadow-black/60 hover:-translate-y-0.5 contain-paint',
+        'relative overflow-hidden rounded-lg bg-white border border-[#e6e6e6] shadow-notion-1 transition-all duration-200 hover:border-[#b7b3ac] hover:shadow-notion-2 contain-paint text-[#000000]',
         className
       )}
       {...props}
@@ -99,3 +99,4 @@ const GlowCard: React.FC<GlowCardProps> = ({
 GlowCard.displayName = 'GlowCard';
 
 export { GlowCard };
+

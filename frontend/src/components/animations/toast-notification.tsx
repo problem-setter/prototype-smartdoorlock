@@ -10,6 +10,10 @@ export interface ToastItem {
   message: string;
   variant?: ToastVariant;
   duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface ToastNotificationProps {
@@ -18,24 +22,24 @@ interface ToastNotificationProps {
 }
 
 const toastIcons: Record<ToastVariant, React.ReactNode> = {
-  success: <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />,
-  error: <XCircle className="h-4 w-4 text-rose-400 shrink-0" />,
-  warning: <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />,
-  info: <ShieldCheck className="h-4 w-4 text-sky-400 shrink-0" />,
+  success: <CheckCircle2 className="h-4 w-4 text-[#1aae39] shrink-0" />,
+  error: <XCircle className="h-4 w-4 text-[#eb5757] shrink-0" />,
+  warning: <AlertTriangle className="h-4 w-4 text-[#dd5b00] shrink-0" />,
+  info: <ShieldCheck className="h-4 w-4 text-[#5645d4] shrink-0" />,
 };
 
 const toastBorderBg: Record<ToastVariant, string> = {
-  success: 'bg-[#091a14]/95 border-emerald-500/40 text-emerald-100 shadow-[0_8px_32px_rgba(16,185,129,0.25)]',
-  error: 'bg-[#1e0a10]/95 border-rose-500/40 text-rose-100 shadow-[0_8px_32px_rgba(244,63,94,0.25)]',
-  warning: 'bg-[#1c1306]/95 border-amber-500/40 text-amber-100 shadow-[0_8px_32px_rgba(245,158,11,0.25)]',
-  info: 'bg-[#081525]/95 border-sky-500/40 text-sky-100 shadow-[0_8px_32px_rgba(14,165,233,0.25)]',
+  success: 'bg-white border-[#d2f4d9] text-[#000000] shadow-notion-2',
+  error: 'bg-white border-[#fadad9] text-[#000000] shadow-notion-2',
+  warning: 'bg-white border-[#fbd6b8] text-[#000000] shadow-notion-2',
+  info: 'bg-white border-[#d6b6f6] text-[#000000] shadow-notion-2',
 };
 
 const toastProgressBar: Record<ToastVariant, string> = {
-  success: 'bg-emerald-400',
-  error: 'bg-rose-400',
-  warning: 'bg-amber-400',
-  info: 'bg-sky-400',
+  success: 'bg-[#1aae39]',
+  error: 'bg-[#eb5757]',
+  warning: 'bg-[#dd5b00]',
+  info: 'bg-[#5645d4]',
 };
 
 export const ToastNotification: React.FC<ToastNotificationProps> = ({ toasts, onDismiss }) => {
@@ -43,7 +47,7 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({ toasts, on
     <div
       aria-live="polite"
       aria-atomic="true"
-      className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-3 sm:px-0"
+      className="fixed bottom-20 sm:bottom-20 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2.5 w-full max-w-[calc(100%-1.5rem)] sm:max-w-[420px] pointer-events-none font-sans px-2"
     >
       <AnimatePresence>
         {toasts.map((toast) => {
@@ -54,28 +58,41 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({ toasts, on
             <motion.div
               key={toast.id}
               layout
-              initial={{ opacity: 0, y: 24, scale: 0.94 }}
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.92, y: 12, transition: { duration: 0.16 } }}
-              transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+              exit={{ opacity: 0, scale: 0.94, y: 8, transition: { duration: 0.15 } }}
+              transition={{ type: 'spring', stiffness: 450, damping: 30 }}
               className={cn(
-                'pointer-events-auto relative overflow-hidden rounded-2xl border p-3.5 sm:p-4 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-3',
+                'pointer-events-auto relative overflow-hidden rounded-lg border p-3.5 sm:p-4 shadow-notion-2 flex items-center justify-between gap-3',
                 toastBorderBg[variant]
               )}
             >
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 {toastIcons[variant]}
-                <span className="text-xs sm:text-sm font-semibold tracking-tight truncate leading-snug">
+                <span className="text-xs sm:text-sm font-semibold tracking-tight truncate leading-snug text-[#000000]">
                   {toast.message}
                 </span>
               </div>
 
+              {toast.action && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.action?.onClick();
+                    onDismiss(toast.id);
+                  }}
+                  className="px-2.5 py-1 rounded-md text-xs font-semibold bg-[#5645d4] hover:bg-[#4534b3] text-white shadow-xs cursor-pointer transition-all shrink-0 active:scale-95"
+                >
+                  {toast.action.label}
+                </button>
+              )}
+
               <button
                 onClick={() => onDismiss(toast.id)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
+                className="p-1 rounded-md text-[#615d59] hover:text-[#000000] hover:bg-[#f6f5f4] transition-colors shrink-0 cursor-pointer"
                 aria-label="Dismiss"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3.5 w-3.5 shrink-0" />
               </button>
 
               {/* Countdown Progress Line */}
@@ -93,4 +110,5 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({ toasts, on
   );
 };
 ToastNotification.displayName = 'ToastNotification';
+
 

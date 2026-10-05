@@ -1,0 +1,9 @@
+.agents/
+.claude/
+.codex/
+.impeccable/
+*.md
+dist/
+frontend/dist/
+node_modules/
+frontend/node_modules/

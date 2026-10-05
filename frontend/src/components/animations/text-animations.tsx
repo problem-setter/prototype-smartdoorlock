@@ -114,7 +114,7 @@ const GradientText: React.FC<GradientTextProps> = ({
   className,
 }) => {
   return (
-    <span className={cn('text-sky-400 font-bold', className)}>
+    <span className={cn('text-[#5645d4] font-bold', className)}>
       {children}
     </span>
   );
@@ -122,3 +122,4 @@ const GradientText: React.FC<GradientTextProps> = ({
 GradientText.displayName = 'GradientText';
 
 export { LetterPullUp, TextReveal, GradientText };
+

@@ -4,9 +4,9 @@
 
 ### 1. Gambaran Produk
 
-Smart Door Lock merupakan sistem keamanan ruangan berbasis Internet of Things (IoT) yang digunakan untuk mengontrol dan memantau akses masuk ke Ruang Server dan Ruang Kelompok Keahlian Jaringan dan Keamanan Program Studi Informatika Universitas Tanjungpura.
+Smart Door Lock merupakan sistem keamanan ruangan berbasis Internet of Things (IoT) yang digunakan untuk mengontrol dan memantau akses masuk ke Ruang Kelompok Keahlian Jaringan dan Keamanan Program Studi Informatika Universitas Tanjungpura.
 
-Sistem terdiri dari perangkat smart door lock yang dipasang pada setiap pintu dan sistem backend berbasis server yang terhubung dengan dashboard website. Perangkat menggunakan ESP32 sebagai pengendali utama, sensor fingerprint AS608 sebagai mekanisme autentikasi pengguna, solenoid door lock sebagai aktuator pengunci, serta sensor status pintu dan buzzer sebagai sistem peringatan.
+Sistem terdiri dari perangkat smart door lock yang dipasang pada setiap pintu dan sistem backend berbasis server yang terhubung dengan dashboard website. Perangkat menggunakan ESP32 sebagai pengendali utama, sensor fingerprint DY50 sebagai mekanisme autentikasi pengguna, solenoid door lock sebagai aktuator pengunci, serta sensor status pintu dan buzzer sebagai sistem peringatan.
 
 Sistem dirancang agar akses fisik terhadap ruangan hanya dapat dilakukan oleh pengguna yang memiliki hak akses. Selain itu, administrator dapat memantau status perangkat, melihat riwayat akses, mengelola pengguna, serta melakukan pengendalian pintu dari jarak jauh melalui dashboard website.
 
@@ -18,7 +18,7 @@ Implementasi awal sistem mencakup dua ruangan, dengan satu unit perangkat Smart 
 
 Produk ini bertujuan untuk:
 
-* Meningkatkan keamanan akses Ruang Server dan Ruang Kelompok Keahlian Jaringan dan Keamanan.
+* Meningkatkan keamanan akses Ruang Kelompok Keahlian Jaringan dan Keamanan.
 * Menggantikan atau melengkapi mekanisme akses berbasis kunci fisik dengan autentikasi biometrik fingerprint.
 * Membatasi akses ruangan berdasarkan pengguna yang telah terdaftar.
 * Menyediakan pencatatan aktivitas akses secara otomatis.
@@ -86,12 +86,12 @@ Riwayat akses yang telah tercatat tidak dapat diubah atau dihapus melalui dashbo
 
 #### 4.1 Autentikasi Fingerprint
 
-Sistem menggunakan sensor fingerprint AS608 sebagai metode utama autentikasi akses.
+Sistem menggunakan sensor fingerprint DY50 sebagai metode utama autentikasi akses.
 
 Alur autentikasi:
 
 1. User menempelkan jari pada sensor fingerprint.
-2. ESP32 melakukan komunikasi dengan sensor AS608 untuk melakukan pencocokan fingerprint.
+2. ESP32 melakukan komunikasi dengan sensor DY50 untuk melakukan pencocokan fingerprint.
 3. Apabila fingerprint valid dan pengguna memiliki hak akses, sistem membuka kunci pintu.
 4. Apabila fingerprint tidak valid atau tidak terdaftar, pintu tetap terkunci.
 5. Hasil akses dicatat sebagai riwayat akses.
@@ -215,7 +215,7 @@ Alurnya adalah:
 2. Superadmin memulai proses enrollment untuk slot fingerprint pengguna (maksimal 3 slot sidik jari per user).
 3. Dashboard mengirim perintah enrollment ke perangkat melalui backend dan MQTT.
 4. Perangkat memasuki mode pendaftaran fingerprint.
-5. User melakukan pemindaian jari pada sensor AS608 sesuai proses enrollment.
+5. User melakukan pemindaian jari pada sensor DY50 sesuai proses enrollment.
 6. Sensor menyimpan template fingerprint.
 7. ESP32 mengirim informasi hasil pendaftaran dan template ID ke server.
 8. Backend menghubungkan template ID dengan data pengguna.
@@ -240,7 +240,7 @@ Untuk komunikasi arah sebaliknya:
 Komponen utama sistem terdiri dari:
 
 * ESP32-WROOM-32.
-* Sensor fingerprint AS608.
+* Sensor fingerprint DY50.
 * Magnetic Door Switch MC-38.
 * Solenoid Door Lock 12V.
 * Relay 5V.

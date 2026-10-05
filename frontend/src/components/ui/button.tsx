@@ -17,11 +17,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <motion.button
         ref={ref}
         disabled={disabled || isLoading}
-        whileTap={!disabled && !isLoading ? { scale: 0.97 } : undefined}
-        whileHover={!disabled && !isLoading ? { scale: 1.015 } : undefined}
-        transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+        whileTap={!disabled && !isLoading ? { scale: 0.98 } : undefined}
+        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
         className={cn(
-          'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors touch-manipulation whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#06090f] disabled:pointer-events-none disabled:opacity-50 cursor-pointer',
+          'inline-flex items-center justify-center gap-2 font-medium transition-colors touch-manipulation whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5645d4]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f6f5f4] disabled:pointer-events-none disabled:opacity-40 cursor-pointer',
           buttonVariants.variant[variant],
           buttonVariants.size[size],
           className
@@ -43,6 +42,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   }
 );
 Button.displayName = 'Button';
+
 
 
 

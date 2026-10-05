@@ -1,13 +1,13 @@
 # Smart Door Lock IoT & Dashboard Website (Untan)
 
-Prototype website modern berbasis **React, TypeScript, Tailwind CSS, Lucide Icons, dan Framer Motion** yang dirancang berdasarkan spesifikasi lengkap dokumen **PRD.md** (*Product Requirements Document*) untuk sistem pengamanan pintu berbasis IoT di **Ruang Server dan Ruang Kelompok Keahlian (KK) Jaringan & Keamanan Prodi Informatika Universitas Tanjungpura**.
+Prototype website modern berbasis **React, TypeScript, Tailwind CSS, Lucide Icons, dan Framer Motion** yang dirancang berdasarkan spesifikasi lengkap dokumen **PRD.md** (*Product Requirements Document*) untuk sistem pengamanan pintu berbasis IoT di **Ruang Kelompok Keahlian (KK) Jaringan & Keamanan Prodi Informatika Universitas Tanjungpura**.
 
 ---
 
 ## 🌟 Fitur Utama & Kepatuhan PRD
 
 ### 1. Sistem Autentikasi & Multi-Role Access Control
-- **Halaman Login Modern**: Dilengkapi dengan *Quick Demo Role Switcher* (Superadmin, Admin Ruangan, User Biasa), kartu identitas, dan status node broker MQTT.
+- **Halaman Login Modern**: Autentikasi kredensial pengguna (NIP/NIM & Password) terproteksi dengan pemetaan role (Superadmin, Admin Ruangan, User Biasa).
 - **Role User (Biasa / Dosen / Peneliti)**:
   - Hak akses minim dan terproteksi.
   - Hanya dapat melihat status ringkas ruangan yang dia miliki hak aksesnya.
@@ -21,14 +21,10 @@ Prototype website modern berbasis **React, TypeScript, Tailwind CSS, Lucide Icon
 - **Role Superadmin (Kepala Lab / Admin Utama)**:
   - Akses kontrol penuh atas seluruh ruangan dan perangkat ESP32 secara global.
   - **Manajemen Pengguna & Otorisasi Ruangan**: Tambah/edit profil user, atur hak akses spesifik per ruangan untuk user maupun admin, nonaktifkan akun, dan hapus akun.
-  - **Alur Pendaftaran Sidik Jari (Enrollment Workflow Simulator)**: Stepper interaktif sensor AS608 via MQTT protocol.
+  - **Alur Pendaftaran Sidik Jari (Enrollment Workflow)**: Stepper pendaftaran sensor DY50 via protokol perintah MQTT.
 
 ### 2. Alur Pengguna (*User Flow*)
-Semua role setelah login akan masuk ke **Halaman Daftar Ruangan (*Room Selection*)** yang mereka miliki hak aksesnya:
-1. **Ruang Server Utama Informatika (`SRV-UNTAN-01`)**
-2. **Ruang KK Jaringan & Keamanan (`KK-NETSEC-02`)**
-
-Setelah memilih ruangan, pengguna akan masuk ke **Halaman Dashboard Ruangan** dengan antarmuka yang disesuaikan secara dinamis berdasarkan role mereka.
+Semua role setelah login akan masuk ke **Halaman Dashboard Ruangan** untuk **Ruang KK Jaringan & Keamanan (`ESP32-KK-NETSEC-02`)** yang terintegrasi langsung dengan modul perangkat keras IoT Smart Door Lock (ESP32, biometrik DY50, solenoid 12V, sensor MC-38, dan buzzer alarm). Antarmuka disesuaikan secara dinamis berdasarkan role masing-masing pengguna.
 
 ### 3. Protokol Komunikasi MQTT QoS 1
 Lalu lintas paket JSON event-driven diproses secara real-time melalui topik MQTT standar PRD:
@@ -83,7 +79,7 @@ bun run build
     │   │   ├── common/
     │   │   │   └── Header.tsx          # Top Navbar responsif (Desktop & Mobile)
     │   │   ├── hardware/
-    │   │   │   ├── HardwarePanel.tsx   # Panel status ESP32, AS608, MC-38, Solenoid
+    │   │   │   ├── HardwarePanel.tsx   # Panel status ESP32, DY50, MC-38, Solenoid
     │   │   │   └── FingerprintEnrollModal.tsx # Multi-step modal pendaftaran sidik jari
     │   │   ├── logs/
     │   │   │   └── LogViewer.tsx       # Tabel riwayat log akses append-only dengan filter

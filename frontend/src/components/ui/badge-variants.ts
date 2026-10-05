@@ -1,16 +1,19 @@
 export const badgeVariants = {
-  default: 'bg-slate-800/90 text-slate-300 border-white/10 shadow-xs',
-  success: 'bg-emerald-950/70 text-emerald-300 border-emerald-500/35 shadow-[0_0_12px_rgba(16,185,129,0.18)]',
-  warning: 'bg-amber-950/70 text-amber-300 border-amber-500/35 shadow-[0_0_12px_rgba(245,158,11,0.18)]',
-  danger: 'bg-rose-950/70 text-rose-300 border-rose-500/40 shadow-[0_0_14px_rgba(244,63,94,0.22)]',
-  info: 'bg-sky-950/70 text-sky-300 border-sky-500/35 shadow-[0_0_12px_rgba(14,165,233,0.18)]',
-  purple: 'bg-purple-950/70 text-purple-300 border-purple-500/35 shadow-[0_0_12px_rgba(168,85,247,0.18)]',
-  online: 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.25)] font-mono tracking-tight',
-  offline: 'bg-rose-950/80 text-rose-300 border-rose-500/50 shadow-[0_0_12px_rgba(244,63,94,0.25)] font-mono tracking-tight',
-  mono: 'bg-slate-950/90 text-slate-300 border-white/12 font-mono tracking-tight shadow-xs',
-  tactical: 'bg-sky-950/80 text-sky-300 border-sky-400/40 font-mono tracking-wider text-[10px] uppercase shadow-[0_0_10px_rgba(14,165,233,0.2)]',
+  default: 'bg-[#f6f5f4] text-[#31302e] border-[#e6e6e6]',
+  success: 'bg-[#eefbf1] text-[#0f762a] border-[#c8f2d1]',
+  warning: 'bg-[#ffe8d4] text-[#793400] border-[#ffd4af]',
+  danger: 'bg-[#fde0ec] text-[#e03131] border-[#f9c0d6]',
+  info: 'bg-[#e6e0f5] text-[#5645d4] border-[#d6b6f6]',
+  purple: 'bg-[#e6e0f5] text-[#391c57] border-[#d6b6f6]',
+  'purple-solid': 'bg-[#5645d4] text-white border-[#4534b3]',
+  online: 'bg-[#eefbf1] text-[#0f762a] border-[#c8f2d1] font-mono tracking-tight',
+  offline: 'bg-[#fde0ec] text-[#e03131] border-[#f9c0d6] font-mono tracking-tight',
+  mono: 'bg-[#f6f5f4] text-[#31302e] border-[#e6e6e6] font-mono tracking-tight',
+  tactical: 'bg-[#f6f5f4] text-[#5645d4] border-[#e6e6e6] font-mono tracking-[0.125px] text-[10px] uppercase font-semibold',
 } as const;
 
 export type BadgeVariant = keyof typeof badgeVariants;
+
+
 
 

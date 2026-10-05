@@ -13,7 +13,7 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
     <span
       ref={ref}
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-medium border backdrop-blur-xs transition-all',
+        'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-[0.125px] border transition-all',
         badgeVariants[variant],
         pulse && 'animate-pulse',
         className
@@ -26,6 +26,7 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
   )
 );
 Badge.displayName = 'Badge';
+
 
 
 

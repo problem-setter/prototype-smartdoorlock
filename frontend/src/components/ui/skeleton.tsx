@@ -8,7 +8,7 @@ const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
     <div
       ref={ref}
       className={cn(
-        'animate-pulse rounded-xl bg-slate-800/60 border border-white/5',
+        'animate-pulse rounded-md bg-[#eceae8] border border-[#e6e6e6]',
         className
       )}
       {...props}
@@ -17,9 +17,9 @@ const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
 );
 Skeleton.displayName = 'Skeleton';
 
-/* Preset skeletons for common patterns */
+/* Preset skeletons for common patterns with Notion styling */
 const SkeletonCard: React.FC<{ className?: string }> = ({ className }) => (
-  <div className={cn('rounded-2xl bg-[#0c111d] border border-slate-800 p-4 sm:p-6 space-y-4', className)}>
+  <div className={cn('rounded-lg bg-white border border-[#e6e6e6] shadow-notion-1 p-5 sm:p-6 space-y-4', className)}>
     <div className="flex items-center gap-3">
       <Skeleton className="h-10 w-10 rounded-full" />
       <div className="space-y-2 flex-1">
@@ -32,8 +32,8 @@ const SkeletonCard: React.FC<{ className?: string }> = ({ className }) => (
       <Skeleton className="h-2.5 w-5/6" />
     </div>
     <div className="flex gap-2">
-      <Skeleton className="h-8 w-20" />
-      <Skeleton className="h-8 w-24" />
+      <Skeleton className="h-8 w-20 rounded-md" />
+      <Skeleton className="h-8 w-24 rounded-md" />
     </div>
   </div>
 );
@@ -43,3 +43,4 @@ const SkeletonLine: React.FC<{ className?: string; width?: string }> = ({ classN
 );
 
 export { Skeleton, SkeletonCard, SkeletonLine };
+

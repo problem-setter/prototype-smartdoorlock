@@ -1,5 +1,4 @@
 // React Bits & Motion animated components
-export { AnimatedCounter } from './animated-counter';
 export { NumberTicker } from './number-ticker';
 export { FadeIn, SlideIn, StaggerContainer, StaggerItem } from './fade-in';
 export { LetterPullUp, TextReveal, GradientText } from './text-animations';
@@ -13,10 +12,10 @@ export { BiometricScanner } from './biometric-scanner';
 export { InteractiveDoorState } from './interactive-door-state';
 export { ToastNotification } from './toast-notification';
 export type { ToastItem, ToastVariant } from './toast-notification';
+export { SlideCommit } from './SlideCommit';
+export type { SlideCommitProps } from './SlideCommit';
 export { SlideToUnlock } from './slide-to-unlock';
 export type { SlideToUnlockProps } from './slide-to-unlock';
-export { PillNav } from './PillNav';
-export type { PillNavItem, PillNavProps } from './PillNav';
 
 
 

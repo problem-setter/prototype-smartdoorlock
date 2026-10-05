@@ -8,14 +8,13 @@ interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Ultra-optimized SpotlightCard using cached bounding rect & direct GPU updates.
- * Eliminates forced synchronous layout reflows on pointer movement.
- */
+  * Optimized SpotlightCard matching Notion Design System.
+  */
 const SpotlightCard: React.FC<SpotlightCardProps> = ({
   children,
   className,
-  spotlightColor = 'rgba(14, 165, 233, 0.08)',
-  spotlightSize = 380,
+  spotlightColor = 'rgba(0, 117, 222, 0.06)',
+  spotlightSize = 350,
   onMouseMove,
   onMouseEnter,
   onMouseLeave,
@@ -76,7 +75,7 @@ const SpotlightCard: React.FC<SpotlightCardProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        'relative overflow-hidden rounded-2xl bg-[#0c111d] border border-white/[0.08] shadow-lg shadow-black/40 transition-all duration-200 hover:border-white/20 contain-paint',
+        'relative overflow-hidden rounded-lg bg-white border border-[#e6e6e6] shadow-notion-1 transition-all duration-200 hover:border-[#b7b3ac] contain-paint text-[#000000]',
         className
       )}
       {...props}
@@ -92,3 +91,4 @@ const SpotlightCard: React.FC<SpotlightCardProps> = ({
 SpotlightCard.displayName = 'SpotlightCard';
 
 export { SpotlightCard };
+

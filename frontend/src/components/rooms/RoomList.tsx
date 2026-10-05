@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useApp } from '@/context';
 import { RoomCard } from './RoomCard';
-import { 
-  Layers, 
-  Info,
-  Lock,
-  Search
-} from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { CircleAlert, CircleCheck, Layers, Search, SearchX, ShieldAlert, WifiOff, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { FadeIn, StaggerContainer, StaggerItem } from '@/components/animations/fade-in';
-import { AnimatedCounter } from '@/components/animations/animated-counter';
-import { TextReveal } from '@/components/animations/text-animations';
+import { StaggerContainer, StaggerItem } from '@/components/animations/fade-in';
+import { Room } from '@/types';
+
+type RoomFilter = 'all' | 'attention' | 'offline' | 'safe';
+type RoomCondition = Exclude<RoomFilter, 'all'> | 'alarm';
+
+const getRoomCondition = (room: Room): RoomCondition => {
+  if (room.isAlarmActive) return 'alarm';
+  if (room.deviceStatus === 'OFFLINE') return 'offline';
+  if (room.doorStatus === 'OPEN' || room.lockStatus === 'UNLOCKED') return 'attention';
+  return 'safe';
+};
+
+const conditionPriority: Record<RoomCondition, number> = { alarm: 0, attention: 1, offline: 2, safe: 3 };
 
 interface RoomListProps {
   onSelectRoom: (roomId: string) => void;
@@ -20,149 +25,142 @@ interface RoomListProps {
 export const RoomList: React.FC<RoomListProps> = ({ onSelectRoom }) => {
   const { rooms, currentUser } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<RoomFilter>('all');
+
+  const accessibleRooms = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'superadmin') return rooms;
+    const allowed = new Set(currentUser.accessibleRoomIds ?? []);
+    return rooms.filter((room) => allowed.has(room.id));
+  }, [rooms, currentUser]);
+
+  const roomCounts = useMemo(() => ({
+    alarm: accessibleRooms.filter((room) => getRoomCondition(room) === 'alarm').length,
+    attention: accessibleRooms.filter((room) => getRoomCondition(room) === 'attention').length,
+    offline: accessibleRooms.filter((room) => getRoomCondition(room) === 'offline').length,
+    safe: accessibleRooms.filter((room) => getRoomCondition(room) === 'safe').length,
+  }), [accessibleRooms]);
+
+  const displayedRooms = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return accessibleRooms
+      .filter((room) => {
+        const condition = getRoomCondition(room);
+        const matchesFilter = activeFilter === 'all' || condition === activeFilter ||
+          (activeFilter === 'attention' && condition === 'alarm');
+        const matchesSearch = !query || [room.name, room.deviceId, room.description]
+          .some((value) => value.toLowerCase().includes(query));
+        return matchesFilter && matchesSearch;
+      })
+      .map((room) => ({ room, priority: conditionPriority[getRoomCondition(room)] }))
+      .sort((a, b) => a.priority - b.priority || a.room.name.localeCompare(b.room.name))
+      .map(({ room }) => room);
+  }, [accessibleRooms, activeFilter, searchQuery]);
+
+  const filters: Array<{ id: RoomFilter; label: string; count: number; icon: React.ReactNode; activeClass: string }> = [
+    { id: 'all', label: 'Semua', count: accessibleRooms.length, icon: <Layers className="h-3.5 w-3.5" />, activeClass: 'border-[#c8c4be] bg-[#f6f5f4] text-[#1a1a1a] font-semibold' },
+    { id: 'attention', label: 'Perlu perhatian', count: roomCounts.alarm + roomCounts.attention, icon: <CircleAlert className="h-3.5 w-3.5" />, activeClass: 'border-[#c8c4be] bg-[#f6f5f4] text-[#1a1a1a] font-semibold' },
+    { id: 'offline', label: 'Offline', count: roomCounts.offline, icon: <WifiOff className="h-3.5 w-3.5" />, activeClass: 'border-[#c8c4be] bg-[#f6f5f4] text-[#1a1a1a] font-semibold' },
+    { id: 'safe', label: 'Aman', count: roomCounts.safe, icon: <CircleCheck className="h-3.5 w-3.5" />, activeClass: 'border-[#c8c4be] bg-[#f6f5f4] text-[#1a1a1a] font-semibold' },
+  ];
+
+  const isFiltering = activeFilter !== 'all' || Boolean(searchQuery.trim());
 
   if (!currentUser) return null;
 
-  // Filter rooms based on user's access rights
-  const accessibleRooms = rooms.filter((r) => 
-    currentUser.role === 'superadmin' || (currentUser.accessibleRoomIds || []).includes(r.id)
-  );
-
-  const filteredRooms = accessibleRooms.filter((r) =>
-    r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const totalAccessToday = rooms.reduce((acc, r) => acc + r.todayAccessCount, 0);
-  const activeAlarms = rooms.filter((r) => r.isAlarmActive).length;
-
   return (
-    <div className="space-y-4 sm:space-y-6">
-      
-      {/* Hero Header & User Welcome */}
-      <FadeIn direction="up">
-        <Card className="p-4 sm:p-7 space-y-4 sm:space-y-0 relative overflow-hidden bg-[#0c111d] border-white/[0.09] shadow-2xl">
-          {/* Subtle Ambient Radial Highlight */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-sky-500/15 via-purple-500/10 to-transparent rounded-full pointer-events-none blur-3xl -mr-20 -mt-20" />
-
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 relative z-10">
-            <div className="space-y-1.5 sm:space-y-2">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-sky-950/80 border border-sky-500/30 text-[10px] font-mono text-sky-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>VaultOS Node Control</span>
-                <span className="text-sky-600">&bull;</span>
-                <span className="text-slate-400">QoS 1 Protected</span>
-              </div>
-              <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight">
-                Selamat Datang, <TextReveal text={currentUser.name} delay={0.1} />
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
-                {currentUser.role === 'user' && (
-                  "Anda memiliki hak akses fisik biometrik fingerprint AS608 pada ruangan terdaftar. Anda dapat memantau status fisik pintu, solenoid, dan riwayat akses personal Anda."
-                )}
-                {currentUser.role === 'admin' && (
-                  "Anda memiliki hak akses monitoring penuh, remote solenoid unlock darurat (5s safety auto-relock), dan manajemen alarm buzzer pada ruangan terdaftar."
-                )}
-                {currentUser.role === 'superadmin' && (
-                  "Hak akses Super Administrator aktif: Konfigurasi IoT Hardware, Live Telemetry, pendaftaran sidik jari AS608, remote unlock, dan manajemen pengguna."
-                )}
-              </p>
-            </div>
-
-            {/* Quick Metrics Cards */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3.5 shrink-0 pt-1 lg:pt-0">
-              <div className="p-3 sm:p-4 rounded-xl bg-slate-950/85 border border-white/[0.08] flex flex-col justify-between shadow-inner">
-                <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider truncate font-mono">Ruangan</div>
-                <div className="text-lg sm:text-2xl font-extrabold text-white font-mono mt-0.5">
-                  <AnimatedCounter value={accessibleRooms.length} /> <span className="text-[10px] sm:text-xs text-slate-400 font-normal font-sans">Lab</span>
-                </div>
-              </div>
-
-              <div className="p-3 sm:p-4 rounded-xl bg-slate-950/85 border border-white/[0.08] flex flex-col justify-between shadow-inner">
-                <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider truncate font-mono">Total Akses</div>
-                <div className="text-lg sm:text-2xl font-extrabold text-slate-100 font-mono mt-0.5">
-                  <AnimatedCounter value={totalAccessToday} /> <span className="text-[10px] sm:text-xs text-slate-400 font-normal font-sans">Hari Ini</span>
-                </div>
-              </div>
-
-              <div className="p-3 sm:p-4 rounded-xl bg-slate-950/90 border border-white/[0.09] flex flex-col justify-between shadow-inner">
-                <div className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-wider truncate font-mono">Status Alarm</div>
-                <div className={`text-base sm:text-xl font-bold font-mono mt-0.5 ${activeAlarms > 0 ? 'text-rose-400 animate-pulse' : 'text-emerald-400'}`}>
-                  {activeAlarms > 0 ? `${activeAlarms} Aktif` : 'Aman (Normal)'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </FadeIn>
-
-      {/* Role Notice Callout */}
-      {currentUser.role === 'user' && (
-        <div className="p-3.5 rounded-2xl bg-[#0c111d] border border-sky-500/25 flex items-start gap-3 text-xs text-slate-300 shadow-md">
-          <Info className="h-4 w-4 text-sky-400 shrink-0 mt-0.5" />
-          <div className="leading-relaxed">
-            <span className="font-bold text-white">Mode Akses Pengguna Biasa:</span> Sesuai standar keamanan laboratorium, Anda dapat melihat log autentikasi personal Anda dan membuka pintu fisik menggunakan sensor sidik jari AS608 terdaftar.
-          </div>
-        </div>
-      )}
-
-      {/* Rooms Section Header & Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+    <section className="space-y-3" aria-labelledby="room-list-heading">
+      <div className="space-y-2 pb-2 border-b border-[#e5e3df]">
         <div>
-          <h2 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
-            <Layers className="h-4 w-4 text-sky-400" />
-            Daftar Ruangan Terdaftar
+          <h2 id="room-list-heading" className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-[#1a1a1a]">
+            Daftar Ruangan
           </h2>
-          <p className="text-[11px] sm:text-xs text-slate-400">
-            Pilih ruangan untuk melihat status IoT, aktuator Solenoid, dan log audit
+          <p className="mt-0.5 text-[11px] sm:text-xs md:text-sm text-[#787671] leading-normal">
+            Pilih ruangan untuk telemetri dan kontrol solenoid.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <div className="w-full sm:w-60">
+        <div className="flex w-full items-center gap-2">
+          <div className="relative min-w-0 flex-1">
             <Input
               type="text"
-              aria-label="Cari ruangan atau kode"
-              placeholder="Cari ruangan / kode..."
+              aria-label="Cari nama, device ID, atau deskripsi ruangan"
+              placeholder="Cari ruangan…"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              icon={<Search className="h-3.5 w-3.5 text-slate-400" />}
-              className="h-8.5 text-xs bg-slate-950/80 border-white/10"
+              onChange={(event) => setSearchQuery(event.target.value)}
+              icon={<Search className="h-4 w-4 text-[#a4a097]" />}
+              className="h-9 sm:h-10 text-xs sm:text-sm bg-[#fafaf9] hover:bg-[#f6f5f4] focus:bg-white border-[#e5e3df] focus:border-[#5645d4] rounded-md pr-8"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-1.5 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-[#5d5b54] hover:bg-[#f6f5f4] hover:text-[#1a1a1a] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#5645d4]"
+                aria-label="Hapus pencarian"
+                title="Hapus pencarian"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            )}
           </div>
-
-          <span className="text-[11px] sm:text-xs font-mono text-slate-400 bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-slate-800 shrink-0">
-            {filteredRooms.length}/{accessibleRooms.length} Ruang
+          <span className="shrink-0 text-[11px] font-mono tabular-nums text-[#5d5b54]" aria-live="polite">
+            {displayedRooms.length}/{accessibleRooms.length}
           </span>
         </div>
       </div>
 
-      {/* Room Grid */}
-      <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-5" staggerDelay={0.1}>
-        {filteredRooms.map((room) => (
-          <StaggerItem key={room.id}>
-            <RoomCard
-              room={room}
-              onSelect={onSelectRoom}
-            />
-          </StaggerItem>
-        ))}
-      </StaggerContainer>
+      <div
+        role="group"
+        className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1 -mx-3.5 px-3.5 sm:mx-0 sm:px-0 sm:flex-wrap"
+        aria-label="Filter status ruangan"
+      >
+        {filters.map((filter) => {
+          const isActive = activeFilter === filter.id;
+          const isAlert = filter.id === 'attention' && filter.count > 0;
+          return (
+            <button
+              key={filter.id}
+              type="button"
+              onClick={() => setActiveFilter(filter.id)}
+              aria-pressed={isActive}
+              className={`inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-2.5 sm:px-3 py-1 text-xs font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5645d4]/30 ${isActive ? filter.activeClass : 'border-[#e5e3df] bg-white text-[#5d5b54] hover:bg-[#f6f5f4] hover:text-[#1a1a1a]'}`}
+            >
+              <span className={isAlert ? 'text-[#dd5b00]' : undefined} aria-hidden="true">{filter.icon}</span>
+              <span>{filter.label}</span>
+              <span className="font-mono tabular-nums text-[11px] opacity-80">{filter.count}</span>
+            </button>
+          );
+        })}
+      </div>
 
-      {filteredRooms.length === 0 && (
-        <div className="text-center py-10 sm:py-12 p-6 rounded-2xl bg-[#080e1b] border border-slate-800 space-y-2">
-          <Lock className="h-8 w-8 text-slate-500 mx-auto opacity-60" />
-          <h3 className="text-sm font-semibold text-white">Tidak Ada Ruangan Ditemukan</h3>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">
-            {searchQuery 
-              ? `Tidak ada ruangan yang cocok dengan pencarian "${searchQuery}".` 
-              : 'Akun Anda belum memiliki otorisasi ruangan. Hubungi Administrator untuk akses.'
-            }
-          </p>
+      {roomCounts.alarm > 0 && activeFilter !== 'attention' && (
+        <div className="flex items-start gap-2.5 rounded-md border border-[#fadad9] bg-[#fdf2f2] px-3.5 py-2.5 text-xs text-[#e03131]" role="status">
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[#e03131]" aria-hidden="true" />
+          <p><strong className="font-semibold">{roomCounts.alarm} alarm aktif.</strong> Tinjau ruangan yang memerlukan perhatian segera.</p>
         </div>
       )}
 
-    </div>
+      {displayedRooms.length > 0 ? (
+        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5" staggerDelay={0.05}>
+          {displayedRooms.map((room) => <StaggerItem key={room.id}><RoomCard room={room} onSelect={onSelectRoom} /></StaggerItem>)}
+        </StaggerContainer>
+      ) : (
+        <div className="rounded-lg border border-[#e5e3df] bg-white px-6 py-10 text-center sm:py-12 shadow-notion-1">
+          <SearchX className="mx-auto h-8 w-8 text-[#5d5b54]" aria-hidden="true" />
+          <h3 className="mt-3 text-sm font-semibold text-[#1a1a1a]">{isFiltering ? 'Tidak ada ruangan yang sesuai' : 'Belum ada ruangan yang dapat diakses'}</h3>
+          <p className="mx-auto mt-1.5 max-w-md text-xs leading-relaxed text-[#5d5b54]">{searchQuery ? `Tidak ada ruangan yang cocok dengan “${searchQuery}” pada filter ini.` : activeFilter !== 'all' ? 'Tidak ada ruangan dengan status ini dalam daftar akses Anda.' : 'Akun Anda belum memiliki akses ke ruangan mana pun. Hubungi administrator laboratorium untuk meminta akses.'}</p>
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="mt-4 text-xs font-semibold text-[#5645d4] underline underline-offset-4 hover:text-[#4534b3] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5645d4] rounded"
+            >
+              Hapus pencarian
+            </button>
+          )}
+        </div>
+      )}
+    </section>
   );
 };
+

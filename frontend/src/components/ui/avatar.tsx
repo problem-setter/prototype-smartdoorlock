@@ -17,7 +17,7 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
     <div
       ref={ref}
       className={cn(
-        'relative shrink-0 overflow-hidden rounded-full border border-slate-700',
+        'relative shrink-0 overflow-hidden rounded-full border border-[#e6e6e6] bg-[#f6f5f4]',
         avatarSizeMap[size],
         className
       )}
@@ -48,7 +48,7 @@ const AvatarFallback = React.forwardRef<HTMLDivElement, AvatarFallbackProps>(
     <div
       ref={ref}
       className={cn(
-        'flex h-full w-full items-center justify-center rounded-full bg-slate-800 text-slate-300 text-xs font-semibold uppercase',
+        'flex h-full w-full items-center justify-center rounded-full bg-[#f6f5f4] text-[#31302e] text-xs font-semibold uppercase',
         className
       )}
       {...props}
@@ -58,3 +58,4 @@ const AvatarFallback = React.forwardRef<HTMLDivElement, AvatarFallbackProps>(
 AvatarFallback.displayName = 'AvatarFallback';
 
 export { Avatar, AvatarImage, AvatarFallback };
+

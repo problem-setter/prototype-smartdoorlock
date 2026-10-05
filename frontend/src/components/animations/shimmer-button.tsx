@@ -8,29 +8,29 @@ interface ShimmerButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 /**
- * React Bits-style shimmer button with a traveling light effect.
+ * Shimmer button with Notion styling.
  */
 const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonProps>(
   ({
     className,
     children,
-    shimmerColor = 'rgba(255,255,255,0.15)',
+    shimmerColor = 'rgba(255,255,255,0.2)',
     shimmerDuration = '2.5s',
     variant = 'default',
     ...props
   }, ref) => {
     const variantStyles = {
-      default: 'bg-sky-600 text-white shadow-md shadow-sky-600/25 hover:bg-sky-500',
-      sky: 'bg-sky-600 text-white shadow-md shadow-sky-600/25 hover:bg-sky-500',
-      purple: 'bg-purple-700 text-white shadow-sm shadow-purple-700/20 hover:bg-purple-600',
-      emerald: 'bg-emerald-700 text-white shadow-md shadow-emerald-700/25 hover:bg-emerald-600',
+      default: 'bg-[#5645d4] text-white hover:bg-[#4534b3] active:bg-[#3a2a99] shadow-xs',
+      sky: 'bg-[#5645d4] text-white hover:bg-[#4534b3] active:bg-[#3a2a99] shadow-xs',
+      purple: 'bg-[#5645d4] text-white hover:bg-[#4534b3] active:bg-[#3a2a99] shadow-xs',
+      emerald: 'bg-[#1aae39] text-white hover:bg-[#158c2e] active:bg-[#117325] shadow-xs',
     };
 
     return (
       <button
         ref={ref}
         className={cn(
-          'relative overflow-hidden rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all active:scale-[0.98] touch-manipulation inline-flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500',
+          'relative overflow-hidden rounded-md px-5 py-2.5 text-xs sm:text-sm font-semibold transition-all active:scale-[0.98] touch-manipulation inline-flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5645d4]/40 cursor-pointer',
           variantStyles[variant],
           className
         )}
@@ -52,4 +52,5 @@ const ShimmerButton = React.forwardRef<HTMLButtonElement, ShimmerButtonProps>(
 ShimmerButton.displayName = 'ShimmerButton';
 
 export { ShimmerButton };
+
 

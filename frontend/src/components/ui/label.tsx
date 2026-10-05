@@ -10,16 +10,17 @@ const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
     <label
       ref={ref}
       className={cn(
-        'text-[11px] sm:text-xs font-medium text-slate-300 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+        'text-xs font-semibold text-[#000000] leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
         className
       )}
       {...props}
     >
       {children}
-      {required && <span className="text-rose-400 ml-0.5">*</span>}
+      {required && <span className="text-[#dd5b00] ml-0.5">*</span>}
     </label>
   )
 );
 Label.displayName = 'Label';
 
 export { Label };
+

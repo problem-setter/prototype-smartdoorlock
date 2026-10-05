@@ -10,41 +10,38 @@ interface PulseBeaconProps {
 
 const beaconColors = {
   emerald: {
-    dot: 'bg-emerald-400',
-    ring: 'bg-emerald-400/30',
-    glow: 'shadow-[0_0_12px_2px_rgba(16,185,129,0.4)]',
+    dot: 'bg-[#1aae39]',
+    ring: 'bg-[#1aae39]/30',
+    glow: '',
   },
   rose: {
-    dot: 'bg-rose-400',
-    ring: 'bg-rose-400/30',
-    glow: 'shadow-[0_0_12px_2px_rgba(244,63,94,0.5)]',
+    dot: 'bg-[#eb5757]',
+    ring: 'bg-[#eb5757]/30',
+    glow: '',
   },
   sky: {
-    dot: 'bg-sky-400',
-    ring: 'bg-sky-400/30',
-    glow: 'shadow-[0_0_12px_2px_rgba(14,165,233,0.4)]',
+    dot: 'bg-[#5645d4]',
+    ring: 'bg-[#5645d4]/30',
+    glow: '',
   },
   amber: {
-    dot: 'bg-amber-400',
-    ring: 'bg-amber-400/30',
-    glow: 'shadow-[0_0_12px_2px_rgba(245,158,11,0.4)]',
+    dot: 'bg-[#dd5b00]',
+    ring: 'bg-[#dd5b00]/30',
+    glow: '',
   },
   purple: {
-    dot: 'bg-purple-400',
-    ring: 'bg-purple-400/30',
-    glow: 'shadow-[0_0_12px_2px_rgba(168,85,247,0.4)]',
+    dot: 'bg-[#391c57]',
+    ring: 'bg-[#d6b6f6]/40',
+    glow: '',
   },
 };
 
 const beaconSizes = {
-  sm: { dot: 'h-2 w-2', ring: 'h-4 w-4' },
-  md: { dot: 'h-2.5 w-2.5', ring: 'h-5 w-5' },
-  lg: { dot: 'h-3 w-3', ring: 'h-6 w-6' },
+  sm: { dot: 'h-2 w-2', ring: 'h-3.5 w-3.5' },
+  md: { dot: 'h-2.5 w-2.5', ring: 'h-4.5 w-4.5' },
+  lg: { dot: 'h-3 w-3', ring: 'h-5 w-5' },
 };
 
-/**
- * React Bits-style pulsing beacon indicator for live status states.
- */
 const PulseBeacon: React.FC<PulseBeaconProps> = ({
   color = 'emerald',
   size = 'sm',
@@ -55,7 +52,7 @@ const PulseBeacon: React.FC<PulseBeaconProps> = ({
   const s = beaconSizes[size];
 
   return (
-    <span className={cn('inline-flex items-center gap-1.5', className)}>
+    <span className={cn('inline-flex items-center gap-1.5 font-sans', className)}>
       <span className="relative flex items-center justify-center">
         {/* Outer pulsing ring */}
         <span
@@ -70,13 +67,12 @@ const PulseBeacon: React.FC<PulseBeaconProps> = ({
           className={cn(
             'relative rounded-full',
             s.dot,
-            c.dot,
-            c.glow
+            c.dot
           )}
         />
       </span>
       {label && (
-        <span className="text-[10px] sm:text-[11px] font-medium text-slate-300">{label}</span>
+        <span className="text-xs font-medium text-[#615d59]">{label}</span>
       )}
     </span>
   );
@@ -84,3 +80,4 @@ const PulseBeacon: React.FC<PulseBeaconProps> = ({
 PulseBeacon.displayName = 'PulseBeacon';
 
 export { PulseBeacon };
+

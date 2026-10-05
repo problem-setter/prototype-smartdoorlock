@@ -1,24 +1,16 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Room } from '../../types';
-import { useApp } from '@/context';
-import { 
-  DoorClosed, 
-  DoorOpen, 
-  Lock, 
-  Unlock, 
-  AlertTriangle, 
-  Activity, 
-  ArrowRight, 
-  Fingerprint, 
-  Radio 
+import { Room } from '@/types';
+import {
+  AlertTriangle,
+  ChevronRight,
+  DoorClosed,
+  DoorOpen,
+  Lock,
+  Unlock,
+  MapPin
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { GlowCard } from '@/components/animations/glow-card';
-import { AnimatedCounter } from '@/components/animations/animated-counter';
-import { PulseBeacon } from '@/components/animations/pulse-beacon';
 
 interface RoomCardProps {
   room: Room;
@@ -26,162 +18,140 @@ interface RoomCardProps {
 }
 
 const RoomCardComponent: React.FC<RoomCardProps> = ({ room, onSelect }) => {
-  const { currentUser } = useApp();
-
   const isLocked = room.lockStatus === 'LOCKED';
   const isDoorOpen = room.doorStatus === 'OPEN';
-  const isOnline = room.deviceStatus === 'ONLINE';
+  const isAlarm = room.isAlarmActive;
 
   return (
-    <GlowCard
-      glowColor={
-        room.isAlarmActive 
-          ? 'rgba(244, 63, 94, 0.28)' 
-          : !isLocked 
-          ? 'rgba(14, 165, 233, 0.24)' 
-          : 'rgba(56, 189, 248, 0.16)'
-      }
-      className={cn(
-        'p-4 sm:p-5 flex flex-col justify-between group cursor-pointer transition-all duration-200 relative rounded-2xl bg-[#0c111d] border border-white/[0.09]',
-        room.isAlarmActive && 'border-rose-500/60 bg-[#1c0810]/95 shadow-2xl shadow-rose-950/50'
-      )}
+    <motion.button
+      type="button"
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.99 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
       onClick={() => onSelect(room.id)}
+      aria-label={`Ruangan ${room.name} - Solenoid ${isLocked ? 'Terkunci' : 'Terbuka'}, Pintu ${isDoorOpen ? 'Terbuka' : 'Tertutup'}${isAlarm ? ', Alarm aktif' : ''}`}
+      className={cn(
+        'group relative flex w-full flex-col justify-between rounded-lg border border-[#e5e3df] bg-white p-3.5 sm:p-4 text-left transition-colors duration-150 ease-out hover:border-[#c8c4be] hover:shadow-notion-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5645d4]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f6f5f4] cursor-pointer shadow-notion-1',
+        isAlarm && 'border-[#fadad9] bg-[#fdf2f2]/30'
+      )}
     >
-      {/* Top Section: Room Code & Status Badges */}
-      <div className="space-y-3.5 sm:space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <Badge variant="mono" className="font-mono font-bold text-white bg-slate-950/90 border-white/15 px-2 py-0.5">
-              {room.code}
-            </Badge>
-            <Badge 
-              variant={isOnline ? 'online' : 'offline'} 
-              icon={isOnline ? <PulseBeacon color="emerald" size="sm" /> : <PulseBeacon color="rose" size="sm" />}
+      <div className="w-full space-y-3">
+        {/* Header: Room Name, Location & Action Chevron */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <span
+              className="block text-sm sm:text-[15px] font-bold tracking-tight text-[#1a1a1a] leading-snug line-clamp-1 group-hover:text-[#5645d4] transition-colors"
+              title={room.name}
             >
-              {room.deviceStatus}
-            </Badge>
-          </div>
-
-          {/* Alarm Indicator */}
-          {room.isAlarmActive ? (
-            <Badge variant="danger" pulse icon={<AlertTriangle className="h-3 w-3 text-rose-400 shrink-0" />} className="status-beacon-rose font-bold font-mono">
-              ALARM ({room.openDurationSeconds}s)
-            </Badge>
-          ) : (
-            <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1">
-              <Radio className="h-3 w-3 text-sky-400" />
-              <span>QoS 1</span>
+              {room.name}
             </span>
-          )}
+            <div className="mt-1 flex items-center gap-1.5 text-xs text-[#5d5b54]">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-[#5d5b54]" aria-hidden="true" />
+              <span className="truncate" title={room.description}>
+                {room.description || 'Ruangan Laboratorium'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+            {isAlarm && (
+              <span className="inline-flex items-center gap-1 font-mono text-[10.5px] font-semibold px-2 py-0.5 rounded-full border border-[#fadad9] bg-[#fdf2f2] text-[#e03131] shrink-0 animate-pulse">
+                <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />
+                <span>ALARM</span>
+              </span>
+            )}
+            <ChevronRight
+              className="h-4 w-4 text-[#5d5b54] group-hover:text-[#5645d4] group-hover:translate-x-0.5 transition-all shrink-0"
+              aria-hidden="true"
+            />
+          </div>
         </div>
 
-        {/* Room Title & Description */}
-        <div>
-          <h3 className="text-base sm:text-lg font-bold text-white tracking-tight group-hover:text-sky-300 transition-colors leading-snug">
-            {room.name}
-          </h3>
-          <p className="text-[11px] sm:text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-            {room.description}
-          </p>
-        </div>
-
-
-        {/* Live Door & Lock States Visualizer */}
-        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 pt-0.5">
-          {/* Physical Door State (MC-38) */}
-          <div className={cn(
-            'p-2.5 sm:p-3 rounded-xl border flex items-center gap-2 sm:gap-2.5 transition-all shadow-inner',
-            isDoorOpen 
-              ? 'bg-amber-950/40 border-amber-500/50 text-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.15)]' 
-              : 'bg-slate-950/85 border-white/[0.08] text-slate-300'
-          )}>
-            <motion.div 
-              animate={{ rotate: isDoorOpen ? -15 : 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+        {/* Hardware Security Telemetry: Solenoid 12V & MC-38 Magnetic Door Switch */}
+        <div className="grid grid-cols-2 divide-x divide-[#e5e3df] rounded-md border border-[#e5e3df] bg-[#fafaf9] overflow-hidden">
+          {/* Solenoid Status */}
+          <div
+            className={cn(
+              'flex items-center gap-2.5 px-3 py-2 transition-colors',
+              !isLocked && 'bg-[#fdf3eb]'
+            )}
+            title={`Solenoid 12V: ${isLocked ? 'Terkunci (Secure)' : 'Terbuka (Unlocked)'}`}
+          >
+            <div
               className={cn(
-                'p-1.5 rounded-lg shrink-0 transition-colors border',
-                isDoorOpen ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-slate-800 text-slate-400 border-white/5'
+                'flex h-6 w-6 items-center justify-center rounded-md shrink-0 transition-transform duration-200',
+                isLocked
+                  ? 'bg-[#eefbf1] text-[#1aae39]'
+                  : 'bg-[#fdf3eb] text-[#dd5b00] scale-105'
               )}
             >
-              {isDoorOpen ? <DoorOpen className="h-4 w-4" /> : <DoorClosed className="h-4 w-4" />}
-            </motion.div>
-            <div className="min-w-0">
-              <div className="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-wider truncate font-mono">Pintu Fisik</div>
-              <div className={cn('text-[11px] sm:text-xs font-bold truncate font-mono', isDoorOpen ? 'text-amber-300' : 'text-slate-200')}>
-                {room.doorStatus}
+              {isLocked ? (
+                <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              ) : (
+                <Unlock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1 leading-tight">
+              <div className="text-[9.5px] uppercase font-mono tracking-wider text-[#5d5b54]">Solenoid</div>
+              <div
+                className={cn(
+                  'font-semibold text-xs truncate transition-colors',
+                  isLocked ? 'text-[#1aae39]' : 'text-[#dd5b00]'
+                )}
+              >
+                {isLocked ? 'Terkunci' : 'Terbuka'}
               </div>
             </div>
           </div>
 
-          {/* Solenoid Lock State */}
-          <div className={cn(
-            'p-2.5 sm:p-3 rounded-xl border flex items-center gap-2 sm:gap-2.5 transition-all shadow-inner',
-            !isLocked 
-              ? 'bg-sky-950/40 border-sky-500/50 text-sky-200 shadow-[0_0_12px_rgba(14,165,233,0.15)]' 
-              : 'bg-slate-950/85 border-white/[0.08] text-slate-300'
-          )}>
-            <motion.div
-              animate={{ rotate: isLocked ? 0 : -20, scale: isLocked ? 1 : 1.1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          {/* Door Status */}
+          <div
+            className={cn(
+              'flex items-center gap-2.5 px-3 py-2 transition-colors',
+              isDoorOpen && 'bg-[#fdf3eb]'
+            )}
+            title={`Sensor Pintu MC-38: ${isDoorOpen ? 'Terbuka (Open)' : 'Tertutup (Closed)'}`}
+          >
+            <div
               className={cn(
-                'p-1.5 rounded-lg shrink-0 transition-colors border',
-                !isLocked ? 'bg-sky-500/20 text-sky-400 border-sky-500/40' : 'bg-slate-800 text-slate-400 border-white/5'
+                'flex h-6 w-6 items-center justify-center rounded-md shrink-0 transition-transform duration-200',
+                isDoorOpen
+                  ? 'bg-[#fdf3eb] text-[#dd5b00] scale-105'
+                  : 'bg-white border border-[#e5e3df] text-[#5d5b54]'
               )}
             >
-              {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4 text-sky-400" />}
-            </motion.div>
-            <div className="min-w-0">
-              <div className="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-wider truncate font-mono">Solenoid 12V</div>
-              <div className={cn('text-[11px] sm:text-xs font-bold truncate font-mono', !isLocked ? 'text-sky-300' : 'text-emerald-400')}>
-                {room.lockStatus}
+              {isDoorOpen ? (
+                <DoorOpen className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              ) : (
+                <DoorClosed className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1 leading-tight">
+              <div className="text-[9.5px] uppercase font-mono tracking-wider text-[#5d5b54]">Pintu</div>
+              <div
+                className={cn(
+                  'font-semibold text-xs truncate transition-colors',
+                  isDoorOpen ? 'text-[#dd5b00]' : 'text-[#37352f]'
+                )}
+              >
+                {isDoorOpen ? 'Terbuka' : 'Tertutup'}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Metrics Row */}
-        <div className="flex items-center justify-between py-2 border-t border-white/[0.08] text-[10px] sm:text-[11px] text-slate-400 font-mono">
-          <div className="flex items-center gap-1.5">
-            <Activity className="h-3.5 w-3.5 text-sky-400 shrink-0" />
-            <span className="truncate">Akses Hari Ini: <strong className="text-white font-mono font-bold"><AnimatedCounter value={room.todayAccessCount} duration={0.8} /></strong></span>
+        {/* Warning Alert if Door Open Timeout is Active */}
+        {isAlarm && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium border bg-[#fdf2f2] border-[#fadad9] text-[#e03131] min-w-0">
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="truncate">
+              Timeout pintu terbuka: {room.openDurationSeconds}s (batas 15s)
+            </span>
           </div>
-
-          <div className="flex items-center gap-1.5">
-            <Fingerprint className="h-3.5 w-3.5 text-purple-400 shrink-0" />
-            <span className="truncate">FP Slot: <strong className="text-white font-mono font-bold">{room.usedFingerprints}/{room.fingerprintCapacity}</strong></span>
-          </div>
-        </div>
+        )}
       </div>
-
-      {/* Action Button */}
-      <div className="pt-3 mt-2 sm:pt-3.5 sm:mt-3 border-t border-white/[0.08]">
-        <Button
-          variant="secondary"
-          size="sm"
-          className="w-full group/btn justify-between cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(room.id);
-          }}
-          rightIcon={
-            <motion.span
-              className="inline-block"
-              whileHover={{ x: 4 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-            >
-              <ArrowRight className="h-3.5 w-3.5 shrink-0 group-hover/btn:translate-x-1 transition-transform" />
-            </motion.span>
-          }
-        >
-          <span className="truncate font-semibold">
-            {currentUser?.role === 'user' ? 'Lihat Riwayat & Status Saya' : 'Masuk Dashboard Kontrol'}
-          </span>
-        </Button>
-      </div>
-
-    </GlowCard>
+    </motion.button>
   );
 };
+
 export const RoomCard = React.memo(RoomCardComponent);
-
-

@@ -3,30 +3,33 @@ import { useApp } from '@/context';
 import { HardwarePanel } from '../hardware/HardwarePanel';
 import { LogViewer } from '../logs/LogViewer';
 import { FingerprintEnrollModal } from '../hardware/FingerprintEnrollModal';
-import { 
-  ArrowLeft, 
-  Key, 
-  Fingerprint, 
-  DoorOpen, 
-  DoorClosed, 
-  Wifi, 
-  WifiOff, 
-  UserPlus, 
-  ShieldAlert, 
-  Send, 
-  CheckCircle2, 
-  FileText, 
-  Sparkles 
+import {
+  ArrowLeft,
+  Fingerprint,
+  WifiOff,
+  UserPlus,
+  Send,
+  CheckCircle2,
+  FileText,
+  AlertOctagon,
+  VolumeX,
+  SlidersHorizontal,
+  Cpu,
+  Lock,
+  Unlock,
+  DoorClosed,
+  DoorOpen,
+  MapPin
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { StatusDot } from '@/components/ui/status-dot';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogBody, DialogFooter } from '@/components/ui/dialog';
 import { FadeIn } from '@/components/animations/fade-in';
-import { InteractiveDoorState } from '@/components/animations/interactive-door-state';
 import { SlideToUnlock } from '@/components/animations/slide-to-unlock';
+import { cn } from '@/lib/utils';
+
+export type RoomDetailTab = 'control' | 'hardware' | 'logs';
 
 interface RoomDetailViewProps {
   roomId: string;
@@ -34,20 +37,18 @@ interface RoomDetailViewProps {
 }
 
 export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ roomId, onBack }) => {
-  const { 
-    rooms, 
-    currentUser, 
-    triggerRemoteUnlock, 
+  const {
+    rooms,
+    currentUser,
+    triggerRemoteUnlock,
     forceRelock,
-    toggleDoorPhysics,
-    toggleDeviceOnline,
-    simulateFingerprintScan,
     requestRoomAccess,
-    users, 
-    logs 
+    clearAlarm,
+    logs
   } = useApp();
-  
+
   const [isInitiatingUnlock, setIsInitiatingUnlock] = useState(false);
+  const [unlockFeedback, setUnlockFeedback] = useState<string | null>(null);
   const [countdownRemaining, setCountdownRemaining] = useState(5);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
@@ -58,11 +59,38 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ roomId, onBack }
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
   const [requestSuccessMessage, setRequestSuccessMessage] = useState<string | null>(null);
 
+  const [activeSubTab, setActiveSubTab] = useState<RoomDetailTab>('control');
+  const [prevRoomId, setPrevRoomId] = useState(roomId);
+
+  // Reset to 'control' tab when roomId changes without triggering cascading effect renders
+  if (prevRoomId !== roomId) {
+    setPrevRoomId(roomId);
+    setActiveSubTab('control');
+  }
+
   const room = useMemo(() => rooms.find((r) => r.id === roomId), [rooms, roomId]);
   const isSolenoidUnlocked = room?.lockStatus === 'UNLOCKED';
-  const isUnlockingActive = isSolenoidUnlocked || isInitiatingUnlock;
   const isOnline = room?.deviceStatus === 'ONLINE';
   const isDoorOpen = room?.doorStatus === 'OPEN';
+
+  const availableSubTabs = useMemo(() => {
+    if (!currentUser) return [];
+    const tabs: {
+      id: RoomDetailTab;
+      label: string;
+      shortLabel: string;
+      icon: React.ComponentType<{ className?: string }>;
+    }[] = [
+      { id: 'control', label: 'Kontrol & Status', shortLabel: 'Kontrol', icon: SlidersHorizontal },
+    ];
+    if (currentUser.role === 'admin' || currentUser.role === 'superadmin') {
+      tabs.push({ id: 'hardware', label: 'Telemetri Hardware', shortLabel: 'Telemetri', icon: Cpu });
+    }
+    tabs.push({ id: 'logs', label: 'Riwayat Akses', shortLabel: 'Riwayat', icon: FileText });
+    return tabs;
+  }, [currentUser]);
+
+  const currentSubTab = (activeSubTab === 'hardware' && currentUser?.role === 'user') ? 'control' : activeSubTab;
 
   // Personal metrics for regular user - memoized at top level
   const { userSuccessCount, lastUserAccessFormatted } = useMemo(() => {
@@ -89,12 +117,14 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ roomId, onBack }
   const handleExecuteUnlock = useCallback(async (): Promise<boolean> => {
     if (!room) return false;
     setIsInitiatingUnlock(true);
+    setUnlockFeedback('Mengirim perintah buka kunci…');
     setCountdownRemaining(5);
 
     const success = await triggerRemoteUnlock(room.id);
     setIsInitiatingUnlock(false);
 
     if (success) {
+      setUnlockFeedback('Perintah diterima. Kunci akan menutup otomatis dalam 5 detik.');
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
       countdownIntervalRef.current = setInterval(() => {
         setCountdownRemaining((prev) => {
@@ -108,14 +138,11 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ roomId, onBack }
           return prev - 1;
         });
       }, 1000);
+    } else {
+      setUnlockFeedback('Perintah tidak diterima. Periksa koneksi node dan coba lagi.');
     }
     return Boolean(success);
   }, [triggerRemoteUnlock, room]);
-
-  const handleStartUnlockFlow = useCallback(() => {
-    if (isUnlockingActive || !isOnline) return;
-    handleExecuteUnlock();
-  }, [isUnlockingActive, isOnline, handleExecuteUnlock]);
 
   const handleForceRelock = useCallback(() => {
     if (!room) return;
@@ -124,17 +151,9 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ roomId, onBack }
       countdownIntervalRef.current = null;
     }
     setCountdownRemaining(5);
+    setUnlockFeedback('Kunci paksa dikirim. Menunggu pembaruan status perangkat.');
     forceRelock(room.id);
   }, [forceRelock, room]);
-
-  const handleTestScan = useCallback((validUser = true) => {
-    if (!room) return;
-    if (!validUser) {
-      simulateFingerprintScan(room.id, null);
-    } else {
-      simulateFingerprintScan(room.id, currentUser);
-    }
-  }, [simulateFingerprintScan, room, currentUser]);
 
   const handleSubmitAccessRequest = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,24 +182,28 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ roomId, onBack }
   if (!room || !currentUser) return null;
 
   if (!hasAccessToRoom) {
+    const isAdmin = currentUser.role === 'admin';
     return (
-      <div className="space-y-4 sm:space-y-6">
+      <div className="w-full min-w-0 space-y-4 sm:space-y-6">
         <Button
           variant="outline"
           size="sm"
           onClick={onBack}
           leftIcon={<ArrowLeft className="h-3.5 w-3.5 shrink-0" />}
+          className="w-fit cursor-pointer self-start"
         >
           Kembali ke Daftar Ruangan
         </Button>
-        <div className="p-6 sm:p-8 text-center rounded-2xl bg-[#0c111d] border border-rose-900/40 space-y-4 shadow-xl">
-          <div className="h-12 w-12 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto border border-rose-500/20">
-            <WifiOff className="h-6 w-6" />
+        <div className="space-y-4 rounded-lg border border-[#fadad9] bg-white p-6 text-center sm:p-8 shadow-notion-1">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-[#fadad9] bg-[#fdf2f2] text-[#e03131]">
+            <WifiOff className="h-6 w-6 shrink-0" />
           </div>
           <div className="space-y-1.5">
-            <h2 className="text-base sm:text-lg font-bold text-white">Tidak Memiliki Hak Akses Ruangan</h2>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
-              Akun Anda ({currentUser.name} &bull; <span className="font-mono text-slate-300">{currentUser.nipNim}</span>) saat ini belum diotorisasikan untuk mengakses <strong>{room.name}</strong> ({room.code}).
+            <h2 className="text-base font-bold text-[#1a1a1a] sm:text-lg">
+              {isAdmin ? 'Ruangan Di Luar Otorisasi Pengelolaan' : 'Tidak Memiliki Hak Akses Ruangan'}
+            </h2>
+            <p className="mx-auto max-w-md text-xs leading-relaxed text-[#5d5b54] sm:text-sm">
+              Akun Anda ({currentUser.name} &bull; <span className="font-mono text-[#1a1a1a] font-semibold">{currentUser.email}</span>) saat ini belum memiliki wewenang untuk mengakses atau mengelola <strong>{room.name}</strong> ({room.deviceId}).
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
@@ -191,56 +214,58 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ roomId, onBack }
               variant="default"
               size="sm"
               onClick={() => setIsAccessRequestOpen(true)}
-              leftIcon={<Send className="h-3.5 w-3.5" />}
-              className="bg-sky-600 hover:bg-sky-500 shadow-md shadow-sky-600/30"
+              leftIcon={<Send className="h-3.5 w-3.5 shrink-0" />}
+              className="font-medium"
             >
-              Ajukan Izin Akses Laboratorium
+              {isAdmin ? 'Ajukan Delegasi Pengelolaan' : 'Ajukan Izin Akses Laboratorium'}
             </Button>
           </div>
         </div>
 
         {/* Access Request Dialog */}
         <Dialog open={isAccessRequestOpen} onOpenChange={setIsAccessRequestOpen}>
-          <DialogContent size="md">
-            <DialogHeader>
-              <div className="flex items-center gap-2 text-sky-400">
+          <DialogContent size="md" onClose={() => setIsAccessRequestOpen(false)}>
+            <DialogHeader className="pr-12 sm:pr-14">
+              <div className="flex items-center gap-2 text-[#5645d4]">
                 <FileText className="h-5 w-5 shrink-0" />
-                <DialogTitle>Permohonan Izin Akses Laboratorium</DialogTitle>
+                <DialogTitle>{isAdmin ? 'Permohonan Delegasi Pengelolaan Ruangan' : 'Permohonan Izin Akses Laboratorium'}</DialogTitle>
               </div>
               <DialogDescription>
-                Tiket permohonan akan diteruskan ke Superadmin FT UNTAN untuk otorisasi sidik jari
+                {isAdmin
+                  ? 'Permohonan delegasi akan diteruskan ke Superadmin FT UNTAN untuk otorisasi hak kelola'
+                  : 'Permohonan izin akan diteruskan ke Superadmin FT UNTAN untuk otorisasi hak akses'}
               </DialogDescription>
             </DialogHeader>
 
             {requestSuccessMessage ? (
               <DialogBody className="py-6 text-center space-y-3">
-                <div className="h-12 w-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30 animate-pulse">
-                  <CheckCircle2 className="h-6 w-6" />
+                <div className="h-12 w-12 rounded-full bg-[#eefbf1] text-[#1aae39] flex items-center justify-center mx-auto border border-[#d2f4d9]">
+                  <CheckCircle2 className="h-6 w-6 shrink-0" />
                 </div>
-                <h4 className="text-sm font-bold text-white">Permohonan Berhasil Dikirim</h4>
-                <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+                <h4 className="text-sm font-bold text-[#1a1a1a]">Permohonan Berhasil Dikirim</h4>
+                <p className="text-xs text-[#5d5b54] max-w-sm mx-auto leading-relaxed">
                   {requestSuccessMessage}
                 </p>
               </DialogBody>
             ) : (
-              <form onSubmit={handleSubmitAccessRequest}>
+              <form onSubmit={handleSubmitAccessRequest} className="flex flex-1 min-h-0 flex-col overflow-hidden">
                 <DialogBody className="space-y-3.5">
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono space-y-1 text-slate-400">
+                  <div className="p-3 rounded-md bg-[#f6f5f4] border border-[#e5e3df] text-xs font-mono space-y-1 text-[#5d5b54]">
                     <div className="flex justify-between">
                       <span>Pemohon:</span>
-                      <span className="text-white">{currentUser.name}</span>
+                      <span className="text-[#1a1a1a] font-semibold">{currentUser.name}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Identitas:</span>
-                      <span className="text-slate-300">{currentUser.nipNim}</span>
+                      <span>Email:</span>
+                      <span className="text-[#37352f]">{currentUser.email}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Ruangan Dituju:</span>
-                      <span className="text-sky-300 font-semibold">{room.name} ({room.code})</span>
+                      <span className="text-[#5645d4] font-semibold">{room.name} ({room.deviceId})</span>
                     </div>
                   </div>
 
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <Label htmlFor="access-reason-input">Alasan / Keperluan Akses:</Label>
                     <Input
                       id="access-reason-input"
@@ -252,30 +277,33 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ roomId, onBack }
                     />
                   </div>
 
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Setelah disetujui, Superadmin akan mendaftarkan template sidik jari Anda pada sensor AS608 ruangan ini.
+                  <p className="text-[11px] text-[#5d5b54] leading-relaxed">
+                    Setelah disetujui, Superadmin akan mendaftarkan template sidik jari Anda pada sensor DY50 ruangan ini.
                   </p>
                 </DialogBody>
 
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setIsAccessRequestOpen(false)}
-                  >
-                    Batal
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="default"
-                    size="sm"
-                    isLoading={isSubmittingRequest}
-                    leftIcon={<Send className="h-3.5 w-3.5" />}
-                    className="bg-sky-600 hover:bg-sky-500"
-                  >
-                    Kirim Permohonan
-                  </Button>
+                <DialogFooter className="pt-3 border-t border-[#e5e3df] bg-[#f6f5f4]">
+                  <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:justify-end">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setIsAccessRequestOpen(false)}
+                      className="min-h-[40px] sm:min-h-[36px] px-4 cursor-pointer rounded-md font-medium"
+                    >
+                      Batal
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="default"
+                      size="sm"
+                      isLoading={isSubmittingRequest}
+                      leftIcon={<Send className="h-3.5 w-3.5 shrink-0" />}
+                      className="min-h-[40px] sm:min-h-[36px] px-5 font-medium cursor-pointer shadow-xs rounded-md"
+                    >
+                      Kirim Permohonan
+                    </Button>
+                  </div>
                 </DialogFooter>
               </form>
             )}
@@ -286,8 +314,8 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ roomId, onBack }
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      
+    <div className="w-full min-w-0 space-y-4 sm:space-y-6 pb-6 sm:pb-0">
+
       {/* Navigation Breadcrumb & Header */}
       <div className="flex items-center justify-between gap-2">
         <Button
@@ -295,217 +323,365 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ roomId, onBack }
           size="sm"
           onClick={onBack}
           leftIcon={<ArrowLeft className="h-3.5 w-3.5 shrink-0" />}
-          className="cursor-pointer"
+          className="cursor-pointer text-xs h-8"
         >
           Kembali ke Ruangan
         </Button>
-
-        <div className="flex items-center gap-2 text-xs font-mono text-slate-400 shrink-0">
-          <span className="font-semibold text-slate-200">{room.code}</span>
-          <span className="text-slate-600">•</span>
-          <span className="text-slate-400 font-sans">{room.location}</span>
-        </div>
+        <span className="shrink-0 rounded-md border border-[#e5e3df] bg-white px-2.5 py-1 font-mono text-[11px] font-semibold text-[#1a1a1a] shadow-xs">
+          {room.deviceId}
+        </span>
       </div>
 
-      {/* Hero Room Info & Main Action Control */}
-      <div className="rounded-2xl p-4 sm:p-7 bg-[#0b111e]/90 border border-white/[0.08] shadow-xl shadow-black/40 backdrop-blur-md space-y-4 sm:space-y-6 relative overflow-hidden">
-        {/* Subtle Ambient Radial Highlight */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-sky-500/10 via-purple-500/5 to-transparent rounded-full pointer-events-none blur-3xl -mr-20 -mt-20" />
-
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6 relative z-10">
-          <div className="space-y-2">
-            <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight leading-snug">
+      {/* Room summary and primary control */}
+      <div className="space-y-3.5 rounded-lg border border-[#e5e3df] bg-white p-4 shadow-notion-1">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="space-y-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-xs text-[#5d5b54]">
+              <MapPin className="h-3.5 w-3.5 text-[#5d5b54]" />
+              <span className="truncate">{room.description || 'Ruangan Laboratorium'}</span>
+            </div>
+            <h1 className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-[#1a1a1a]">
               {room.name}
             </h1>
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-mono text-slate-400">
-                Node ID: <strong className="text-sky-400 font-semibold">{room.deviceId}</strong>
-              </span>
-              <span className="text-slate-700">•</span>
-              <StatusDot status={isOnline ? 'online' : 'offline'} label={isOnline ? 'ESP32 Terhubung' : 'Perangkat Terputus'} />
-            </div>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
-              {room.description}
-            </p>
           </div>
 
-          {/* Primary Action Controls */}
-          {(currentUser.role === 'admin' || currentUser.role === 'superadmin') && (
-            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-              <Button
-                onClick={handleStartUnlockFlow}
-                disabled={!isOnline || isUnlockingActive}
-                variant="outline"
-                size="sm"
-                className={cn(
-                  'border-sky-500/30 text-sky-300 hover:bg-sky-500/10 cursor-pointer font-mono text-xs',
-                  !isOnline && 'opacity-50'
-                )}
-                leftIcon={<ShieldAlert className="h-3.5 w-3.5 text-amber-400 shrink-0" />}
-              >
-                Logika Keamanan
-              </Button>
-
-              {currentUser.role === 'superadmin' && (
-                <Button
-                  variant="purple"
-                  size="sm"
-                  onClick={() => setEnrollModalOpen(true)}
-                  leftIcon={<UserPlus className="h-3.5 w-3.5 shrink-0" />}
-                >
-                  Enroll FP
-                </Button>
-              )}
-            </div>
+          {currentUser.role === 'superadmin' && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setEnrollModalOpen(true)}
+              leftIcon={<UserPlus className="h-3.5 w-3.5 shrink-0" />}
+              className="w-full sm:w-auto font-medium cursor-pointer shadow-xs rounded-md shrink-0"
+            >
+              Enroll Sidik Jari DY50
+            </Button>
           )}
         </div>
 
-        {/* Dedicated Industrial Slide-to-Unlock Command Deck */}
-        {(currentUser.role === 'admin' || currentUser.role === 'superadmin') && (
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-950/80 border border-sky-500/20 shadow-inner space-y-2.5 relative">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <div className="p-1 rounded bg-sky-500/20 text-sky-400">
-                  <Key className="h-3.5 w-3.5" />
-                </div>
-                <span className="text-[11px] font-mono font-bold text-white uppercase tracking-wider">
-                  Remote Actuator Control &bull; Slide to Unlock
-                </span>
+        {/* Instant Alarm Banner at Top for Room Admin / Superadmin */}
+        {room.isAlarmActive && (
+          <div className="flex flex-col gap-2.5 rounded-md border border-[#fadad9] bg-[#fdf2f2] p-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#fdf2f2] text-[#e03131]">
+                <AlertOctagon className="h-4.5 w-4.5 shrink-0" />
               </div>
-              <span className="text-[10px] font-mono text-sky-400 bg-sky-950/90 px-2 py-0.5 rounded border border-sky-800/40">
-                Solenoid Control &bull; 12V
-              </span>
-            </div>
-
-            <SlideToUnlock
-              onUnlock={handleExecuteUnlock}
-              isUnlocking={isInitiatingUnlock}
-              isUnlocked={isSolenoidUnlocked}
-              disabled={!isOnline}
-              disabledReason="Node ESP32 terputus - Remote unlock dinonaktifkan"
-              countdownRemaining={countdownRemaining}
-              onForceRelock={handleForceRelock}
-              roomName={room.name}
-              roomCode={room.code}
-              label="GESER UNTUK REMOTE UNLOCK SOLENOID"
-              unlockedLabel="SOLENOID 12V TERBUKA (RELAY AKTIF)"
-              variant="hero"
-            />
-          </div>
-        )}
-
-        {/* User View: Quick status & access permissions summary */}
-        {currentUser.role === 'user' && (
-          <div className="p-4 rounded-2xl bg-slate-950/80 border border-white/[0.08] space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <span className="font-mono text-slate-400">
-                Status Otorisasi: <strong className="text-emerald-400 font-bold">AKSES FISIK AKTIF</strong>
-              </span>
-              <span className="text-slate-400 text-[11px]">
-                Gunakan sensor fingerprint AS608 fisik di pintu {room.code}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 pt-2 border-t border-white/[0.08] font-mono text-[11px]">
-              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-white/5 space-y-0.5">
-                <span className="text-slate-400 text-[10px]">Akses Sukses Anda:</span>
-                <div className="text-sm font-bold text-emerald-400 font-mono">
-                  {userSuccessCount} <span className="text-xs text-slate-400 font-normal">Kali</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-bold text-[#e03131] truncate">
+                  PERINGATAN: Timeout Alarm Aktif!
                 </div>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-white/5 space-y-0.5">
-                <span className="text-slate-400 text-[10px]">Terakhir Diakses:</span>
-                <div className="text-xs font-semibold text-slate-200 truncate">
-                  {lastUserAccessFormatted}
-                </div>
+                <p className="text-[11px] text-[#5d5b54]">
+                  Pintu terbuka {room.openDurationSeconds} dtk (Maks: 15 dtk). Buzzer aktif di ruangan.
+                </p>
               </div>
             </div>
+            {(currentUser.role === 'admin' || currentUser.role === 'superadmin') && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => clearAlarm(room.id)}
+                leftIcon={<VolumeX className="h-3.5 w-3.5 shrink-0" />}
+                className="w-full cursor-pointer"
+              >
+                Matikan Alarm & Buzzer
+              </Button>
+            )}
           </div>
         )}
       </div>
 
-      {/* Physics State Display & Real-time Telemetry Dashboard */}
-      <FadeIn direction="up" delay={0.05}>
-        <InteractiveDoorState
-          doorStatus={room.doorStatus}
-          lockStatus={room.lockStatus}
-          isAlarmActive={room.isAlarmActive}
-          onToggleDoor={() => toggleDoorPhysics(room.id)}
-        />
-      </FadeIn>
+      {/* Notion Segmented Sub-Tabs Bar */}
+      <div
+        className="flex items-center gap-1 border-b border-[#e5e3df] overflow-x-auto scrollbar-none"
+        role="tablist"
+        aria-label="Sub-navigasi Ruangan"
+      >
+        {availableSubTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = currentSubTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => setActiveSubTab(tab.id)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2 text-xs font-medium border-b-2 transition-all cursor-pointer shrink-0 -mb-px outline-none focus-visible:ring-2 focus-visible:ring-[#5645d4]/40 text-center whitespace-nowrap",
+                isActive
+                  ? "border-[#5645d4] text-[#5645d4] font-semibold bg-white"
+                  : "border-transparent text-[#5d5b54] hover:text-[#1a1a1a] hover:border-[#c8c4be] hover:bg-[#fafaf9]"
+              )}
+            >
+              <Icon className={cn("h-3.5 w-3.5 shrink-0", isActive ? "text-[#5645d4]" : "text-[#5d5b54]")} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
 
-      {/* Admin/Superadmin Hardware Sandbox Controls */}
-      {(currentUser.role === 'admin' || currentUser.role === 'superadmin') && (
-        <FadeIn direction="up" delay={0.1}>
-          <div className="p-3.5 rounded-2xl bg-slate-950/90 border border-white/[0.08] flex flex-wrap items-center justify-between gap-3 shadow-inner">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-sky-400 shrink-0" />
-              <div>
-                <span className="text-[10px] uppercase font-mono font-bold text-slate-300">IoT Hardware Sandbox</span>
-                <p className="text-[11px] text-slate-400">Simulasi trigger sensor dan sinyal aktuator secara lokal</p>
+      {/* Tab 1: Kontrol & Status */}
+      {currentSubTab === 'control' && (
+        <div className="space-y-4">
+          <div className="space-y-4 rounded-lg border border-[#e5e3df] bg-white p-4 sm:p-5 shadow-notion-1">
+            {/* Hardware Telemetry 4-Cell Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {/* Node Perangkat ESP32 */}
+              <div
+                className="flex items-center gap-3 p-3 rounded-lg border border-[#e5e3df] bg-[#fafaf9] hover:border-[#c8c4be] transition-all shadow-2xs"
+                title={`ESP32 Node: ${isOnline ? 'Terhubung (Online)' : 'Terputus (Offline)'}`}
+              >
+                <div
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-md shrink-0 border transition-transform duration-200',
+                    isOnline
+                      ? 'bg-[#e6e0f5] text-[#5645d4] border-[#d6b6f6]'
+                      : 'bg-[#fdf2f2] text-[#e03131] border-[#fadad9]'
+                  )}
+                >
+                  <Cpu className="h-4 w-4 shrink-0" aria-hidden="true" />
+                </div>
+                <div className="min-w-0 flex-1 leading-tight">
+                  <div className="text-[10.5px] font-medium text-[#787671] truncate">ESP32 Node</div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span
+                      className={cn(
+                        'h-1.5 w-1.5 rounded-full shrink-0',
+                        isOnline ? 'bg-[#1aae39]' : 'bg-[#e03131]'
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        'font-semibold text-xs truncate',
+                        isOnline ? 'text-[#1a1a1a]' : 'text-[#e03131]'
+                      )}
+                    >
+                      {isOnline ? 'Terhubung' : 'Terputus'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* MC-38 Reed Switch */}
+              <div
+                className="flex items-center gap-3 p-3 rounded-lg border border-[#e5e3df] bg-[#fafaf9] hover:border-[#c8c4be] transition-all shadow-2xs"
+                title={`Sensor Pintu MC-38: ${isDoorOpen ? 'Terbuka (Door Open)' : 'Tertutup (Door Closed)'}`}
+              >
+                <div
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-md shrink-0 border transition-transform duration-200',
+                    isDoorOpen
+                      ? 'bg-[#ffe8d4] text-[#dd5b00] border-[#fbd6b8]'
+                      : 'bg-[#dcecfa] text-[#0075de] border-[#bde0fe]'
+                  )}
+                >
+                  {isDoorOpen ? (
+                    <DoorOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <DoorClosed className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1 leading-tight">
+                  <div className="text-[10.5px] font-medium text-[#787671] truncate">Sensor Pintu</div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span
+                      className={cn(
+                        'h-1.5 w-1.5 rounded-full shrink-0',
+                        isDoorOpen ? 'bg-[#dd5b00]' : 'bg-[#1aae39]'
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        'font-semibold text-xs truncate',
+                        isDoorOpen ? 'text-[#dd5b00]' : 'text-[#1a1a1a]'
+                      )}
+                    >
+                      {isDoorOpen ? 'Terbuka' : 'Tertutup'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Solenoid 12V */}
+              <div
+                className="flex items-center gap-3 p-3 rounded-lg border border-[#e5e3df] bg-[#fafaf9] hover:border-[#c8c4be] transition-all shadow-2xs"
+                title={`Solenoid 12V: ${!isSolenoidUnlocked ? 'Terkunci (Locked)' : 'Terbuka (Unlocked)'}`}
+              >
+                <div
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-md shrink-0 border transition-transform duration-200',
+                    !isSolenoidUnlocked
+                      ? 'bg-[#d9f3e1] text-[#1aae39] border-[#d2f4d9]'
+                      : 'bg-[#ffe8d4] text-[#dd5b00] border-[#fbd6b8]'
+                  )}
+                >
+                  {!isSolenoidUnlocked ? (
+                    <Lock className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <Unlock className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1 leading-tight">
+                  <div className="text-[10.5px] font-medium text-[#787671] truncate">Solenoid 12V</div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span
+                      className={cn(
+                        'h-1.5 w-1.5 rounded-full shrink-0',
+                        !isSolenoidUnlocked ? 'bg-[#1aae39]' : 'bg-[#dd5b00]'
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        'font-semibold text-xs truncate',
+                        !isSolenoidUnlocked ? 'text-[#1a1a1a]' : 'text-[#dd5b00]'
+                      )}
+                    >
+                      {!isSolenoidUnlocked ? 'Terkunci' : 'Terbuka'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Alarm */}
+              <div
+                className="flex items-center gap-3 p-3 rounded-lg border border-[#e5e3df] bg-[#fafaf9] hover:border-[#c8c4be] transition-all shadow-2xs"
+                title={`Status Alarm: ${room.isAlarmActive ? 'Peringatan Aktif (Alarm)' : 'Normal (Aman)'}`}
+              >
+                <div
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-md shrink-0 border transition-transform duration-200',
+                    room.isAlarmActive
+                      ? 'bg-[#fdf2f2] text-[#e03131] border-[#fadad9] animate-pulse'
+                      : 'bg-[#fafaf9] text-[#787671] border-[#e5e3df]'
+                  )}
+                >
+                  {room.isAlarmActive ? (
+                    <AlertOctagon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-[#1aae39]" aria-hidden="true" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1 leading-tight">
+                  <div className="text-[10.5px] font-medium text-[#787671] truncate">Status Alarm</div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span
+                      className={cn(
+                        'h-1.5 w-1.5 rounded-full shrink-0',
+                        room.isAlarmActive ? 'bg-[#e03131]' : 'bg-[#1aae39]'
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        'font-semibold text-xs truncate',
+                        room.isAlarmActive ? 'text-[#e03131]' : 'text-[#1a1a1a]'
+                      )}
+                    >
+                      {room.isAlarmActive ? 'Aktif!' : 'Normal'}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => toggleDoorPhysics(room.id)}
-                leftIcon={isDoorOpen ? <DoorClosed className="h-3.5 w-3.5 text-emerald-400" /> : <DoorOpen className="h-3.5 w-3.5 text-amber-400" />}
-                className="cursor-pointer"
-              >
-                Pintu: {isDoorOpen ? 'Tutup (MC-38)' : 'Buka (MC-38)'}
-              </Button>
+            {(currentUser.role === 'admin' || currentUser.role === 'superadmin') && (
+              <div className="border-t border-[#e5e3df] pt-4.5 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xs font-semibold text-[#1a1a1a]">Kontrol Solenoid Jarak Jauh</h3>
+                    <p className="text-[11px] text-[#787671] mt-0.5">
+                      Buka kunci solenoid secara instan melalui instruksi MQTT
+                    </p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10.5px] font-mono font-medium text-[#5d5b54] bg-[#fafaf9] px-2 py-0.5 rounded border border-[#e5e3df] shrink-0">
+                    Auto-relock: 5s
+                  </span>
+                </div>
+                <SlideToUnlock
+                  onUnlock={handleExecuteUnlock}
+                  isUnlocking={isInitiatingUnlock}
+                  isUnlocked={isSolenoidUnlocked}
+                  disabled={!isOnline}
+                  disabledReason="Node ESP32 terputus - remote unlock tidak tersedia"
+                  countdownRemaining={countdownRemaining}
+                  onForceRelock={handleForceRelock}
+                  roomName={room.name}
+                  roomCode={room.deviceId}
+                  label="Geser untuk Membuka Kunci"
+                  unlockedLabel="Kunci Terbuka"
+                  variant="compact"
+                />
+                {unlockFeedback && (
+                  <p
+                    className="flex items-center gap-2 rounded-md border border-[#e5e3df] bg-[#fafaf9] p-2.5 text-xs text-[#5d5b54]"
+                    role="status"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#1aae39] shrink-0" />
+                    <span>{unlockFeedback}</span>
+                  </p>
+                )}
+              </div>
+            )}
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => toggleDeviceOnline(room.id)}
-                leftIcon={isOnline ? <WifiOff className="h-3.5 w-3.5 text-rose-400" /> : <Wifi className="h-3.5 w-3.5 text-emerald-400" />}
-                className="cursor-pointer"
-              >
-                Node: {isOnline ? 'Set Offline' : 'Set Online'}
-              </Button>
+            {/* User View: Quick status & access permissions summary */}
+            {currentUser.role === 'user' && (
+              <div className="space-y-3.5 border-t border-[#e5e3df] pt-4">
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#eefbf1] text-[#1aae39] border border-[#d2f4d9]">
+                      <CheckCircle2 className="h-4.5 w-4.5 shrink-0" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="text-xs font-bold text-[#1a1a1a] truncate block">Status Otorisasi Akun Anda</span>
+                      <p className="text-[11px] text-[#5d5b54] truncate">Terdaftar di direktori sivitas FT UNTAN &bull; Template DY50 aktif</p>
+                    </div>
+                  </div>
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[#d2f4d9] bg-[#eefbf1] px-2.5 py-1 text-xs font-semibold text-[#1aae39] shrink-0">
+                    <Fingerprint className="h-3.5 w-3.5 shrink-0" />
+                    Otorisasi Aktif
+                  </span>
+                </div>
 
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleTestScan(true)}
-                leftIcon={<Fingerprint className="h-3.5 w-3.5 text-emerald-400" />}
-                className="cursor-pointer"
-              >
-                Scan FP Valid
-              </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-md border border-[#e5e3df] bg-[#fafaf9] p-2.5">
+                    <span className="text-[10px] font-mono uppercase text-[#5d5b54]">Total Akses Berhasil</span>
+                    <p className="mt-1 font-mono text-base font-bold text-[#1a1a1a]">{userSuccessCount} kali</p>
+                  </div>
+                  <div className="rounded-md border border-[#e5e3df] bg-[#fafaf9] p-2.5">
+                    <span className="text-[10px] font-mono uppercase text-[#5d5b54]">Akses Terakhir</span>
+                    <p className="mt-1 truncate font-mono text-xs font-medium text-[#37352f]">{lastUserAccessFormatted}</p>
+                  </div>
+                </div>
 
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleTestScan(false)}
-                leftIcon={<Fingerprint className="h-3.5 w-3.5 text-rose-400" />}
-                className="cursor-pointer"
-              >
-                Scan FP Ditolak
-              </Button>
-            </div>
+                <div className="rounded-md border border-[#e5e3df] bg-[#fafaf9] p-3 text-xs text-[#5d5b54] flex items-start gap-2">
+                  <Fingerprint className="h-4 w-4 text-[#5645d4] shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    Untuk membuka pintu, tempelkan jari Anda yang telah didaftarkan ke modul sensor <strong>DY50</strong> pada panel fisik di samping pintu lab.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
+        </div>
+      )}
+
+      {/* Tab 2: Telemetri Hardware */}
+      {currentSubTab === 'hardware' && (currentUser.role === 'admin' || currentUser.role === 'superadmin') && (
+        <FadeIn direction="up" delay={0.02}>
+          <HardwarePanel room={room} />
         </FadeIn>
       )}
 
-      {/* Deep Hardware Diagnostic Panel */}
-      <FadeIn direction="up" delay={0.12}>
-        <HardwarePanel room={room} />
-      </FadeIn>
-
-      {/* Audit Log Stream */}
-      <FadeIn direction="up" delay={0.15}>
-        <LogViewer roomId={room.id} />
-      </FadeIn>
+      {/* Tab 3: Riwayat Akses */}
+      {currentSubTab === 'logs' && (
+        <FadeIn direction="up" delay={0.02}>
+          <LogViewer roomId={room.id} />
+        </FadeIn>
+      )}
 
       {/* Fingerprint Enrollment Modal */}
       <FingerprintEnrollModal
         isOpen={enrollModalOpen}
         onClose={() => setEnrollModalOpen(false)}
-        targetUser={users[0] || null}
+        targetUser={currentUser || null}
         targetRoom={room}
       />
     </div>
@@ -513,3 +689,4 @@ export const RoomDetailView: React.FC<RoomDetailViewProps> = ({ roomId, onBack }
 };
 
 export default RoomDetailView;
+

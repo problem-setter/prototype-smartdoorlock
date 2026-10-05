@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smartlock-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: smart_door_lock
+      POSTGRES_USER: smartlock_user
+      POSTGRES_PASSWORD: smartlock_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/internal/database/init.sql:/docker-entrypoint-initdb.d/init.sql:z
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartlock_user -d smart_door_lock"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: smartlock-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"    # MQTT TCP for ESP32 nodes & backend
+      - "9001:9001"    # MQTT WebSocket for web inspection
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:z
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smartlock-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    environment:
+      PORT: 8080
+      DATABASE_URL: postgres://smartlock_user:smartlock_password@postgres:5432/smart_door_lock?sslmode=disable
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+      JWT_SECRET: untan_smart_door_lock_super_secret_jwt_key_2026
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000
+      ADMIN_PASSWORD: Superadmin#2026
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
+  mosquitto_data:
+  mosquitto_log:
